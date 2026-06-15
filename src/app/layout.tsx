@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 
 const inter = Inter({
   variable: "--font-geist-sans",
-  subsets: ["sans-serif"],
+  subsets: ["latin"],
 });
 
 const outfit = Outfit({
