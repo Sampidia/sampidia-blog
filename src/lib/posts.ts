@@ -206,7 +206,7 @@ function parseCSV(csvText: string): Record<string, string>[] {
 
 export async function getPosts(): Promise<Post[]> {
   try {
-    const res = await fetch(SPREADSHEET_URL, { next: { revalidate: 3600 } });
+    const res = await fetch(SPREADSHEET_URL, { next: { revalidate: 3600, tags: ['posts'] } });
     if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
     const csvText = await res.text();
     const rawPosts = parseCSV(csvText);
@@ -225,7 +225,7 @@ export async function getPosts(): Promise<Post[]> {
   const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
   if (dropboxUrl) {
     try {
-      const res = await fetch(dropboxUrl, { next: { revalidate: 3600 } });
+      const res = await fetch(dropboxUrl, { next: { revalidate: 3600, tags: ['posts'] } });
       if (!res.ok) throw new Error('Dropbox fetch failed');
       const rawPosts = await res.json();
       if (Array.isArray(rawPosts)) {
