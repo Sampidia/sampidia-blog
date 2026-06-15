@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Revalidate the specific posts fetch cache tag
-    revalidateTag('posts');
+    revalidateTag('posts', 'max');
 
     // 2. Revalidate all pages to purge static HTML cache on Vercel
     revalidatePath('/', 'layout');
