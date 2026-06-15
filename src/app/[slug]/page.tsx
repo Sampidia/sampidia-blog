@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { getPostBySlug, getPosts } from '@/lib/posts';
 import AdUnit from '@/components/AdUnit';
 import CusdisComments from '@/components/CusdisComments';
+import { parseMarkdownToHtml } from '@/lib/markdown';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -190,7 +191,7 @@ export default async function PostPage({ params }: Props) {
             <div
               className="prose dark:prose-invert"
               itemProp="articleBody"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(post.content) }}
             />
 
             {/* In-article ad (mid) */}

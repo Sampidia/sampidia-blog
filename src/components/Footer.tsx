@@ -103,9 +103,9 @@ export default function Footer() {
               <Image
                 src="/images/SamPidia.png"
                 alt="SamPidia Logo"
-                width={150}
-                height={40}
-                className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
+                width={180}
+                height={50}
+                className="h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
               />
             </Link>
             <p className="text-slate-400 text-sm max-w-md leading-relaxed">

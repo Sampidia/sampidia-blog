@@ -45,9 +45,9 @@ export default function Header() {
               <Image
                 src="/images/SamPidia.png"
                 alt="SamPidia Logo"
-                width={160}
-                height={45}
-                className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
+                width={200}
+                height={56}
+                className="h-12 sm:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
                 priority
               />
             </Link>
