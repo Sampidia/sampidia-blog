@@ -1,0 +1,24 @@
+import { Metadata } from 'next';
+import { getMarkdownContent, parseMarkdownToHtml } from '@/lib/markdown';
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn about SamPidia, our story, mission, and how we help students and graduates across Nigeria.',
+};
+
+export default async function Page() {
+  const content = await getMarkdownContent('About us.md');
+  const htmlContent = parseMarkdownToHtml(content);
+
+  return (
+    <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-8 font-heading">
+        About SamPidia
+      </h1>
+      <div 
+        className="prose dark:prose-invert"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
+    </article>
+  );
+}

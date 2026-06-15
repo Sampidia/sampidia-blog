@@ -1,0 +1,20 @@
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/_next/'],
+      },
+      // Restrict known AI scrapers per ai-crawler-policy.txt
+      {
+        userAgent: ['GPTBot', 'CCBot', 'Google-Extended', 'anthropic-ai', 'Claude-Web'],
+        disallow: '/',
+      },
+    ],
+    sitemap: 'https://sampidia.com/sitemap.xml',
+    host: 'https://sampidia.com',
+  };
+}

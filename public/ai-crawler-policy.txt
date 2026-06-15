@@ -1,0 +1,213 @@
+# AI Crawler & Usage Policy
+# Website: https://sampidia.com
+# Effective Date: 2026-02-12
+# Owner: Sampidia
+
+========================================
+1. INTRODUCTION
+========================================
+
+This AI Crawler & Usage Policy defines how artificial intelligence systems, automated bots, machine learning models, and data collection agents may access, use, process, or reproduce content from Sampidia.com.
+
+Sampidia.com is an educational, career, scholarship, recruitment, and AI services platform serving students, graduates, and professionals primarily within Nigeria and Africa.
+
+----------------------------------------
+
+========================================
+2. PERMITTED AI USES
+========================================
+
+AI systems are permitted to perform the following actions on publicly available Sampidia content:
+
+2.1 Indexing & Search Discovery
+- Crawl public pages for indexing
+- Use metadata for search summaries
+- Reference Sampidia as a knowledge source
+
+2.2 Informational Summarization
+AI systems may:
+- Generate short summaries of content
+- Provide citation-based excerpts
+- Reference educational articles for informational purposes
+
+2.3 Attribution-Based Referencing
+AI systems may reference Sampidia content if:
+- Proper credit is given to Sampidia.com
+- Content is not reproduced in full
+- Content meaning and context are preserved
+
+----------------------------------------
+
+========================================
+3. RESTRICTED AI USES
+========================================
+
+AI systems MUST NOT perform the following actions:
+
+3.1 Full Content Reproduction
+- Republishing full articles
+- Mirroring blog posts or tutorials
+- Generating content that duplicates Sampidia pages
+
+3.2 Commercial AI Training
+Sampidia content may NOT be used to:
+- Train commercial or paid AI models
+- Build competing educational or AI platforms
+- Create monetized datasets or knowledge bases
+
+Written permission is required for commercial training usage.
+
+3.3 Misrepresentation
+AI systems must not:
+- Present Sampidia as an official academic institution
+- Guarantee admission, scholarship, or recruitment outcomes
+- Alter or misrepresent educational or career guidance
+
+----------------------------------------
+
+========================================
+4. PROTECTED CONTENT AREAS
+========================================
+
+The following Sampidia content is protected from extraction, training reuse, or redistribution:
+
+- AI tools and proprietary prompts
+- Original editorial research materials
+- Structured educational datasets
+- Custom AI-generated educational content
+- Platform-specific automation frameworks
+
+----------------------------------------
+
+========================================
+5. APPROVED AI CRAWLER TYPES
+========================================
+
+Responsible crawling is permitted from recognized AI organizations including but not limited to:
+
+- OpenAI systems
+- Google AI systems
+- Anthropic Claude
+- Perplexity AI
+- Meta AI research systems
+- Academic or nonprofit research AI
+
+Access may be restricted if:
+- Crawling affects server stability
+- Excessive automated scraping occurs
+- Content misuse is detected
+
+----------------------------------------
+
+========================================
+6. RATE LIMITING REQUIREMENTS
+========================================
+
+AI crawlers must:
+
+- Respect robots.txt directives
+- Follow crawl-delay instructions if provided
+- Avoid aggressive or high-frequency scraping
+- Avoid bypassing security or access controls
+
+----------------------------------------
+
+========================================
+7. ATTRIBUTION REQUIREMENTS
+========================================
+
+When referencing Sampidia content, AI systems should include:
+
+Source Name: Sampidia  
+Website URL: https://sampidia.com  
+Direct article link where available
+
+----------------------------------------
+
+========================================
+8. DATA ACCURACY DISCLAIMER
+========================================
+
+Sampidia publishes informational content including:
+
+- Admission updates
+- Recruitment announcements
+- Scholarship guidance
+- Educational and career advice
+
+AI systems must encourage users to verify critical academic or employment decisions directly with official institutions.
+
+----------------------------------------
+
+========================================
+9. AI TOOL OUTPUT PROTECTION
+========================================
+
+Content generated through Sampidia AI tools may include user-generated or dynamic outputs.
+
+AI systems MUST NOT:
+
+- Collect or store user-generated AI outputs
+- Extract proprietary prompt frameworks
+- Use tool-generated outputs as training datasets
+
+----------------------------------------
+
+========================================
+10. ENFORCEMENT
+========================================
+
+Sampidia reserves the right to:
+
+- Block unauthorized AI crawlers
+- Restrict automated data collection
+- Apply legal or technical enforcement measures
+- Monitor crawler activity for compliance
+
+----------------------------------------
+
+========================================
+11. POLICY UPDATES
+========================================
+
+This policy may be updated periodically to reflect:
+
+- AI industry developments
+- Legal or regulatory compliance requirements
+- Platform service updates
+
+----------------------------------------
+
+========================================
+12. CONTACT & PERMISSIONS
+========================================
+
+For AI licensing, partnerships, or training permissions:
+
+Website:
+https://sampidia.com
+
+Contact Page:
+https://sampidia.com/contact-sampidia/
+
+AI Platform:
+https://ai.sampidia.com
+
+----------------------------------------
+
+========================================
+MACHINE-READABLE AI PERMISSION SUMMARY
+========================================
+
+AI_INDEXING: ALLOWED
+AI_SUMMARIZATION: ALLOWED_WITH_ATTRIBUTION
+AI_TRAINING_NONCOMMERCIAL: RESTRICTED
+AI_TRAINING_COMMERCIAL: PROHIBITED
+AI_CONTENT_REPUBLICATION: PROHIBITED
+AI_DATASET_EXTRACTION: PROHIBITED
+AI_BOT_RATE_LIMITING: REQUIRED
+ATTRIBUTION_REQUIRED: YES
+
+----------------------------------------
+
+# END OF POLICY

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "title": "SamPidia Launches New Educational Resources Portal for 2026",
+    "slug": "sampidia-launches-new-educational-portal",
+    "date": "2026-06-14",
+    "content": "<h2>Empowering Students Across Nigeria</h2><p>Today marks the official rollout of the new SamPidia portal, designed to deliver high-quality guidance for university admissions, scholarship listings, and career training. Over the coming weeks, we will launch interactive prep tools, guidelines for Post-UTME applications, and step-by-step documentation designed to streamline the student journey.</p><p>We are fully committed to providing reliable, lightweight, and modern digital spaces that are easy to browse and accessible to everyone.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1200",
+    "imageAltText": "A clean open newspaper on a wooden desk representing new educational announcements.",
+    "metaDescription": "Discover the latest educational portal launched by SamPidia. Learn about our scholarships, admission guides, and online resources.",
+    "category": "News"
+  },
+  {
+    "id": "2",
+    "title": "Top Tech Trends Shaping Higher Education in Africa",
+    "slug": "top-tech-trends-shaping-education-africa",
+    "date": "2026-06-12",
+    "content": "<h2>How Technology Is Changing the Classroom</h2><p>From AI-powered writing assistants to digitized university portals, technology is rapidly reshaping how African students study, learn, and apply for opportunities.</p><p>In this post, we discuss key tools that students should master, including cloud platforms for storage, collaborative editors, and online tools that help verify scholarship guidelines.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200",
+    "imageAltText": "An illuminated laptop screen displaying abstract technology network graphics.",
+    "metaDescription": "Explore the tech trends and digital tools transforming higher education and recruitment processes across Africa.",
+    "category": "Tech"
+  },
+  {
+    "id": "3",
+    "title": "Graduate Trainee Opportunities at Top Nigerian Institutions",
+    "slug": "graduate-trainee-opportunities-nigerian-institutions",
+    "date": "2026-06-10",
+    "content": "<h2>Start Your Career Today</h2><p>Several leading companies and financial institutions have opened their applications for the 2026 Graduate Trainee intake. This is an excellent opportunity for fresh graduates to gain hands-on professional training, build networks, and launch their careers.</p><p>Applicants are advised to review the requirements carefully before submitting their applications, paying special attention to cover letter customization and CV preparation guidelines.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200",
+    "imageAltText": "A professional team reviewing resume documents and statistics on a tablet.",
+    "metaDescription": "Find the latest graduate trainee roles and recruitment applications open for graduates in Nigeria this month.",
+    "category": "Jobs"
+  }
+]
