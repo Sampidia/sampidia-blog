@@ -6,9 +6,9 @@ import AdUnit from '@/components/AdUnit';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SamPidia - Educational Resources, Scholarships & Career Portal',
+  title: 'SamPidia - Breaking News, Tech, Sports & Lifestyle',
   description:
-    'SamPidia is a premium educational blog covering scholarships, admissions, tech trends, job opportunities, and student lifestyle across Nigeria and Africa.',
+    'SamPidia is your go-to online hub for breaking news, tech trends, sports updates, and modern lifestyle tips from Nigeria and across Africa.',
   alternates: { canonical: '/' },
 };
 

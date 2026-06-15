@@ -19,7 +19,10 @@ export interface Post {
   author: Author;
 }
 
-const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1SoZVQQMlgQr_LqOYRUjOMrbsVR-Xu8D-Q4phlP4TPj4/export?format=csv';
+const SPREADSHEET_URL =
+  process.env.SPREADSHEET_CSV_URL ||
+  'https://docs.google.com/spreadsheets/d/1SoZVQQMlgQr_LqOYRUjOMrbsVR-Xu8D-Q4phlP4TPj4/export?format=csv';
+
 const DEFAULT_DROPBOX_URL = 'https://www.dropbox.com/scl/fi/qfvjo4yz662ts8g07a0sk/backup-posts.json?rlkey=b31kgrp0si0ggb8az22h5l073&st=7jckqgo2&dl=1';
 
 function cleanDropboxUrl(url: string): string {
@@ -28,6 +31,53 @@ function cleanDropboxUrl(url: string): string {
     return url.replace('dl=0', 'dl=1');
   }
   return url;
+}
+
+/**
+ * Parses dates in DD-MM-YYYY or DD/MM/YYYY format (as exported by Google Sheets)
+ * into a valid ISO YYYY-MM-DD string that JavaScript's Date() can parse correctly.
+ * Falls back to the original string if it's already a valid date.
+ */
+function parseDateString(rawDate: string): string {
+  if (!rawDate) return '';
+  // Match DD-MM-YYYY or DD/MM/YYYY
+  const ddmmyyyy = rawDate.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (ddmmyyyy) {
+    const [, day, month, year] = ddmmyyyy;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  // Match YYYY-MM-DD already (return as-is)
+  const yyyymmdd = rawDate.match(/^\d{4}-\d{2}-\d{2}/);
+  if (yyyymmdd) return rawDate;
+  // Fallback — return as-is and hope it works
+  return rawDate;
+}
+
+/**
+ * Normalises category values from the spreadsheet to the canonical
+ * values used in the Next.js routes. Handles singular/plurals, case, etc.
+ */
+function normalizeCategory(raw: string): string {
+  const lower = raw.trim().toLowerCase();
+  switch (lower) {
+    case 'sport':
+    case 'sports':
+      return 'Sports';
+    case 'job':
+    case 'jobs':
+      return 'Jobs';
+    case 'tech':
+    case 'technology':
+      return 'Tech';
+    case 'news':
+      return 'News';
+    case 'lifestyle':
+    case 'life':
+      return 'Lifestyle';
+    default:
+      // Title-case the raw value as a best-effort fallback
+      return raw.trim().charAt(0).toUpperCase() + raw.trim().slice(1).toLowerCase();
+  }
 }
 
 export function getAuthorForCategory(category: string): Author {
@@ -52,12 +102,14 @@ function normalizePost(raw: any): Post {
   const id = String(raw.id || raw.ID || raw.Id || '');
   const title = String(raw.title || raw.Title || raw.TITLE || '');
   const slug = String(raw.slug || raw.Slug || raw.SLUG || '').trim().replace(/^\//, '');
-  const date = String(raw.date || raw.Date || raw.DATE || '');
+  const rawDate = String(raw.date || raw.Date || raw.DATE || '');
+  const date = parseDateString(rawDate);
   const content = String(raw.content || raw.Content || raw.CONTENT || '');
   const coverImage = String(raw.coverImage || raw.coverimage || raw.CoverImage || raw.COVERIMAGE || raw.image || raw.Image || '');
   const imageAltText = String(raw.imageAltText || raw.imagealttext || raw.ImageAltText || raw.IMAGEALTTEXT || raw.alt || raw.Alt || '');
   const metaDescription = String(raw.metaDescription || raw.metadescription || raw.MetaDescription || raw.METADESCRIPTION || raw.description || raw.Description || '');
-  const category = String(raw.category || raw.Category || raw.CATEGORY || 'News');
+  const rawCategory = String(raw.category || raw.Category || raw.CATEGORY || 'News');
+  const category = normalizeCategory(rawCategory);
   const status = String(raw.status || raw.Status || raw.STATUS || 'published');
 
   return {
@@ -117,6 +169,7 @@ function parseCSV(csvText: string): Record<string, string>[] {
         i++;
       } else {
         inQuotes = !inQuotes;
+        currentLine += char;
       }
     } else if (char === '\r' || char === '\n') {
       if (inQuotes) {
@@ -125,16 +178,14 @@ function parseCSV(csvText: string): Record<string, string>[] {
         if (char === '\r' && nextChar === '\n') {
           i++;
         }
-        lines.push(currentLine);
+        if (currentLine.trim()) lines.push(currentLine);
         currentLine = '';
       }
     } else {
       currentLine += char;
     }
   }
-  if (currentLine) {
-    lines.push(currentLine);
-  }
+  if (currentLine.trim()) lines.push(currentLine);
 
   if (lines.length === 0) return [];
   const headerLine = lines[0];
@@ -156,13 +207,13 @@ function parseCSV(csvText: string): Record<string, string>[] {
 export async function getPosts(): Promise<Post[]> {
   try {
     const res = await fetch(SPREADSHEET_URL, { next: { revalidate: 3600 } });
-    if (!res.ok) throw new Error('Spreadsheet fetch failed');
+    if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
     const csvText = await res.text();
     const rawPosts = parseCSV(csvText);
     if (rawPosts && rawPosts.length > 0) {
       const posts = rawPosts
         .map(normalizePost)
-        .filter(post => post.status.toLowerCase() === 'published' && post.slug);
+        .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
       if (posts.length > 0) {
         return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       }
@@ -180,7 +231,7 @@ export async function getPosts(): Promise<Post[]> {
       if (Array.isArray(rawPosts)) {
         const posts = rawPosts
           .map(normalizePost)
-          .filter(post => post.status.toLowerCase() === 'published' && post.slug);
+          .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
         if (posts.length > 0) {
           return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         }
@@ -190,9 +241,9 @@ export async function getPosts(): Promise<Post[]> {
     }
   }
 
-  const posts = localPosts
+  const posts = (localPosts as any[])
     .map(normalizePost)
-    .filter(post => post.status.toLowerCase() === 'published' && post.slug);
+    .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
   return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 

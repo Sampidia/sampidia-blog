@@ -27,10 +27,41 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
     el.setAttribute('data-page-title', post.title);
     el.setAttribute('data-page-url', pageUrl);
 
+    // Resize handler: Cusdis sends postMessage events with resize info
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://cusdis.com') return;
+      const iframe = el.querySelector('iframe');
+      if (!iframe) return;
+
+      // Cusdis sends { event: 'resize', offsetHeight: number }
+      if (event.data && event.data.event === 'resize' && event.data.offsetHeight) {
+        const newHeight = Math.max(550, Number(event.data.offsetHeight) + 80);
+        iframe.style.height = `${newHeight}px`;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Polling fallback: set a minimum height and grow as iframe content loads
+    let pollAttempts = 0;
+    const pollInterval = setInterval(() => {
+      const iframe = el.querySelector('iframe');
+      if (iframe) {
+        // Ensure iframe never collapses
+        if (!iframe.style.height || parseInt(iframe.style.height) < 550) {
+          iframe.style.height = '550px';
+        }
+        iframe.style.width = '100%';
+        iframe.style.border = 'none';
+        iframe.scrolling = 'no';
+      }
+      pollAttempts++;
+      if (pollAttempts > 20) clearInterval(pollInterval);
+    }, 500);
+
     // Load (or reload) the Cusdis embed script
     const existingScript = document.getElementById('cusdis-script');
     if (existingScript) {
-      // If the script already exists (e.g. navigation), re-init the widget
       // @ts-ignore
       if (window.CUSDIS) window.CUSDIS.initial();
     } else {
@@ -41,6 +72,11 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
       script.defer = true;
       document.body.appendChild(script);
     }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearInterval(pollInterval);
+    };
   }, [post.id, post.title, post.slug, appId]);
 
   return (
@@ -49,7 +85,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
         Discussion
       </h3>
 
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[600px]">
         <div ref={containerRef} id="cusdis_thread" />
       </div>
     </div>

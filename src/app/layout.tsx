@@ -17,10 +17,10 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "SamPidia - Educational Resources, Scholarships & Career Portal",
+    default: "SamPidia - Breaking News, Tech, Sports & Lifestyle",
     template: "%s | SamPidia"
   },
-  description: "SamPidia is a premium educational blog and information portal providing guides for higher institution admissions, Post-UTME applications, scholarships, recruitment opportunities, and graduate lifestyle.",
+  description: "SamPidia is your premier online hub covering breaking news, technology trends, sports updates, and modern lifestyle tips from Nigeria and across Africa.",
   verification: {
     google: "k1uUo-zKFdez6r3a4mI61cjp9XmNrzYYhts09wOplYw"
   },

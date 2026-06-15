@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, BookOpen } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
@@ -41,12 +42,14 @@ export default function Header() {
           {/* Logo Section */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-sky-600 dark:bg-sky-500 p-2 rounded-lg text-white group-hover:scale-105 transition-transform duration-200 shadow-md shadow-sky-600/10">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                SamPidia
-              </span>
+              <Image
+                src="/images/SamPidia.png"
+                alt="SamPidia Logo"
+                width={160}
+                height={45}
+                className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
+                priority
+              />
             </Link>
           </div>
 

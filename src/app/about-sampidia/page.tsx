@@ -3,7 +3,7 @@ import { getMarkdownContent, parseMarkdownToHtml } from '@/lib/markdown';
 
 export const metadata: Metadata = {
   title: 'About Us',
-  description: 'Learn about SamPidia, our story, mission, and how we help students and graduates across Nigeria.',
+  description: 'Learn about SamPidia – your premier hub for breaking news, tech trends, sports coverage, and lifestyle content from Nigeria and Africa.',
 };
 
 export default async function Page() {
