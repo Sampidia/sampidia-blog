@@ -26,7 +26,12 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://sampidia.com"),
   alternates: {
-    canonical: "/"
+    canonical: "/",
+    types: {
+      'application/rss+xml': [
+        { url: '/feed.xml', title: 'SamPidia RSS Feed' }
+      ]
+    }
   }
 };
 
