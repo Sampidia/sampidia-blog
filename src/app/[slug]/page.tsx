@@ -107,7 +107,7 @@ export default async function PostPage({ params }: Props) {
           <article className="lg:col-span-2" itemScope itemType="https://schema.org/BlogPosting">
 
             {/* Breadcrumb */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mb-5">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 mb-5">
               <Link href="/" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Home</Link>
               <span>/</span>
               <Link
@@ -117,7 +117,7 @@ export default async function PostPage({ params }: Props) {
                 {post.category}
               </Link>
               <span>/</span>
-              <span className="text-slate-600 dark:text-slate-300 truncate max-w-[200px]">{post.title}</span>
+              <span className="text-slate-700 dark:text-slate-300 truncate max-w-[200px]">{post.title}</span>
             </nav>
 
             {/* Category badge */}
@@ -155,11 +155,11 @@ export default async function PostPage({ params }: Props) {
                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-none" itemProp="author">
                     {post.author.name}
                   </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Staff Writer</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Staff Writer</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500 ml-auto">
+              <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 ml-auto">
                 <time dateTime={post.date} itemProp="datePublished">
                   {new Date(post.date).toLocaleDateString('en-US', {
                     weekday: 'short',
@@ -179,6 +179,7 @@ export default async function PostPage({ params }: Props) {
                 fill
                 className="object-cover"
                 priority
+                fetchPriority="high"
                 sizes="(max-width: 1024px) 100vw, 66vw"
                 itemProp="image"
               />
@@ -222,10 +223,10 @@ export default async function PostPage({ params }: Props) {
                   />
                 </div>
                 <p className="font-bold text-lg text-slate-900 dark:text-white font-heading">{post.author.name}</p>
-                <p className="text-xs text-sky-600 dark:text-sky-400 font-semibold uppercase tracking-wider mb-2">
+                <p className="text-xs text-sky-700 dark:text-sky-400 font-semibold uppercase tracking-wider mb-2">
                   {post.category} Editor
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   Expert writer covering {post.category.toLowerCase()} topics, helping readers stay informed and ahead.
                 </p>
               </div>
@@ -259,10 +260,10 @@ export default async function PostPage({ params }: Props) {
                   </Link>
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-full">
+                      <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 rounded-full">
                         {relPost.category}
                       </span>
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400">
                         {new Date(relPost.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>

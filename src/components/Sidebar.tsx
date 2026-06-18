@@ -41,13 +41,13 @@ export default function Sidebar({ popularPosts }: SidebarProps) {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">
                   {post.category}
                 </span>
                 <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors mt-0.5 animate-duration-300">
                   {post.title}
                 </h4>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
                   {new Date(post.date).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -70,7 +70,7 @@ export default function Sidebar({ popularPosts }: SidebarProps) {
             <Link
               key={cat.name}
               href={cat.path}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-50 hover:bg-sky-50 text-slate-600 hover:text-sky-600 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 dark:hover:text-sky-400 border border-slate-200/50 dark:border-slate-800 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-50 hover:bg-sky-50 text-slate-600 hover:text-sky-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 dark:hover:text-sky-400 border border-slate-200/50 dark:border-slate-800 rounded-lg transition-colors"
             >
               {cat.name}
             </Link>

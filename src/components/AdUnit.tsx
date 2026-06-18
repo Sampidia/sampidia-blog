@@ -23,7 +23,7 @@ export default function AdUnit({ slot, className = '' }: AdUnitProps) {
   return (
     <div className={`my-6 flex justify-center items-center overflow-hidden w-full ${className}`}>
       <div className="bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-3 w-full text-center">
-        <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-semibold block mb-1">
+        <span className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-semibold block mb-1">
           Advertisement
         </span>
         <ins

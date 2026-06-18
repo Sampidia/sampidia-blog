@@ -106,9 +106,10 @@ export default function Footer() {
                 width={180}
                 height={50}
                 className="h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
+                sizes="180px"
               />
             </Link>
-            <p className="text-slate-400 text-sm max-w-md leading-relaxed">
+            <p className="text-slate-300 text-sm max-w-md leading-relaxed">
               Your premier online hub covering breaking news, tech trends, sports updates, and modern lifestyle tips.
             </p>
             <div className="flex gap-3 flex-wrap">
@@ -210,11 +211,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>&copy; {currentYear} SamPidia. All rights reserved.</p>
           <div className="flex gap-4">
-            <span className="hover:text-slate-400 transition-colors cursor-pointer">
-              Your Hub for News, Tech & Sport
+            <span className="hover:text-slate-300 transition-colors cursor-pointer">
+              Your Hub for News, Tech &amp; Sport
             </span>
           </div>
         </div>

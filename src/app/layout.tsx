@@ -50,6 +50,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Preconnect hints for third-party analytics and ads */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
+
         {/* Sync script to prevent theme flash */}
         <script
           id="theme-loader"

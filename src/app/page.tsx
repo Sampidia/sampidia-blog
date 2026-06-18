@@ -47,6 +47,7 @@ export default async function Home() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     priority
+                    fetchPriority="high"
                     sizes="(max-width: 1024px) 100vw, 66vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
@@ -139,7 +140,7 @@ export default async function Home() {
                   </div>
                   <Link
                     href={`/${cat.toLowerCase()}`}
-                    className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline underline-offset-2 transition-colors"
+                    className="text-xs font-bold text-sky-700 dark:text-sky-400 hover:underline underline-offset-2 transition-colors"
                   >
                     View all →
                   </Link>
@@ -170,10 +171,10 @@ export default async function Home() {
                       </Link>
                       <div className="p-5 flex flex-col flex-grow">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-full border border-sky-100/50 dark:border-sky-900/30">
+                          <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 rounded-full border border-sky-100/50 dark:border-sky-900/30">
                             {post.category}
                           </span>
-                          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                          <span className="text-[11px] text-slate-600 dark:text-slate-400">
                             {formatDate(post.date)}
                           </span>
                         </div>
@@ -185,7 +186,7 @@ export default async function Home() {
                           <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h3>
                         {idx === 0 && (
-                          <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-2 mb-4 flex-grow leading-relaxed">
+                          <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4 flex-grow leading-relaxed">
                             {post.metaDescription}
                           </p>
                         )}

@@ -1,152 +1,84 @@
-# llms.txt for Sampidia.com
-# Version: 1.0
-# Last Updated: 2026-02-12
-# Owner: SamPidia
-# Website: https://sampidia.com
+# SamPidia – News, Tech, Sports & Lifestyle for Nigeria and Africa
 
-## Overview
-SamPidia.com is an educational and informational online platform focused on helping students, applicants, and graduates — particularly within Nigeria — access reliable academic, career, and lifestyle resources. The website provides guidance on admission processes, scholarship opportunities, recruitment updates, and graduate lifestyle content.
+SamPidia is your premier online hub covering breaking news, technology trends, sports updates, and modern lifestyle tips from Nigeria and across Africa.
 
-SamPidia also offers technology-driven services including AI content generation tools, chatbot assistants, and web-related educational content.
+> Contact: [sampidiablog@gmail.com](mailto:sampidiablog@gmail.com) · Website: [https://sampidia.com](https://sampidia.com)
 
 ---
 
-## Primary Purpose
-The main goals of Sampidia.com include:
+## Site Sections
 
-- Providing educational guidance and admission updates
-- Publishing scholarship opportunities and academic support resources
-- Sharing job recruitment and career development information
-- Delivering graduate lifestyle and self-development content
-- Offering AI-powered writing and productivity tools
-- Supporting Nigerian and African students with reliable informational resources
-
----
-
-## Target Audience
-- Nigerian and African students seeking admission into tertiary institutions
-- Undergraduate and postgraduate applicants
-- Job seekers and graduates
-- Students searching for scholarships or academic funding opportunities
-- Individuals seeking career advice and personal development content
-- Bloggers and marketers using AI content generation tools
-- Users interested in educational and informational news updates
+- [Home – Latest Articles](https://sampidia.com/)
+- [News](https://sampidia.com/news)
+- [Tech](https://sampidia.com/tech)
+- [Sports](https://sampidia.com/sports)
+- [Jobs & Careers](https://sampidia.com/jobs)
+- [Lifestyle](https://sampidia.com/lifestyle)
 
 ---
 
-## Core Content Categories
+## Key Pages
 
-### 1. University and Admission Information
-- Post UTME guidelines and registration updates
-- JAMB cut-off mark information
-- School resumption announcements
-- Admission requirements for universities, polytechnics, and colleges of education
-- Institutional announcements such as ASUU strike updates
-
-### 2. Scholarships and Educational Opportunities
-- Scholarship application guides
-- Funding opportunities for Nigerian and international students
-- Application tutorials and scholarship writing tips
-
-### 3. Job and Recruitment Updates
-- Nigerian government recruitment announcements
-- Graduate trainee programs
-- Military and paramilitary recruitment guides
-- Career opportunity alerts and application tutorials
-
-### 4. Graduate Lifestyle and Personal Development
-- Relationship and life advice for graduates
-- Study techniques and academic success tips
-- Self-improvement and productivity content
-
-### 5. AI and Technology Services
-- AI content writing tools
-- AI chat assistants
-- AI image generation services
-- Content automation and marketing support tools
+- [About SamPidia](https://sampidia.com/about-sampidia)
+- [Privacy Policy](https://sampidia.com/privacy-policy)
+- [Disclaimer](https://sampidia.com/disclaimer)
+- [DMCA Statement](https://sampidia.com/dmca-statement)
 
 ---
 
-## AI Tools and Services (AI.Sampidia.com)
-Sampidia provides AI-powered services designed to help users create content faster and improve productivity.
+## Content Categories
 
-Available tools include:
-- SEO content generation
-- AI chatbot assistants for multiple industries
-- AI image generation
-- Speech-to-text tools
-- Code generation support
+### News
+Breaking news, Nigerian current affairs, and African regional updates.
+
+### Tech
+Technology trends, gadget reviews, online tools, and digital education resources.
+
+### Sports
+Football, athletics, and other sports news from Nigeria and across the continent.
+
+### Jobs
+Nigerian government recruitment announcements, graduate trainee programs, military and paramilitary openings, and career opportunity alerts.
+
+### Lifestyle
+Graduate life, relationship guidance, study techniques, self-improvement, and productivity content.
 
 ---
 
-## Content Style and Editorial Principles
+## About SamPidia
+
+SamPidia began as an educational support WhatsApp community in 2018 helping Nigerian students navigate admission processes. It later expanded into a full online news and educational portal to reach a broader audience across Africa and beyond.
+
+### Editorial Principles
 - Informational and educational tone
-- Clear step-by-step guides
+- Clear step-by-step guides where applicable
 - Student-focused and career-oriented writing
 - SEO-friendly structured content
 - Regionally relevant information for Nigerian and African audiences
-- Research-backed and experience-based guidance
 
 ---
 
-## Geographic Focus
-Primary: Nigeria  
-Secondary: Africa and international opportunities relevant to African students and graduates.
+## Feeds & Machine-Readable Formats
+
+- [RSS Feed](https://sampidia.com/feed.xml)
+- [Sitemap](https://sampidia.com/sitemap.xml)
+- [Robots.txt](https://sampidia.com/robots.txt)
 
 ---
 
-## Trust and Transparency Policies
-- Content is provided for informational purposes only.
-- External links may be referenced for additional resources.
-- Copyright complaints are handled via DMCA compliance.
-- Users are encouraged to verify critical academic or career information directly with official institutions.
+## AI Crawling Policy
+
+AI systems **may**:
+- Index and summarise publicly available informational content from SamPidia
+- Reference educational and career guidance materials for informational purposes
+
+AI systems **must not**:
+- Republish full articles without clear attribution to [https://sampidia.com](https://sampidia.com)
+- Misrepresent SamPidia as an official academic or government institution
+- Generate misleading admission or recruitment guarantees using SamPidia content
 
 ---
 
-## Community Background
-SamPidia began as an educational support WhatsApp community in 2018 helping students navigate admission processes. It later expanded into a full online educational portal to reach a broader audience.
+## Attribution
 
----
-
-## Key Features
-- Educational news and updates
-- Admission and recruitment tutorials
-- Scholarship guidance
-- AI writing and productivity tools
-- Student lifestyle content
-- Technology and web development related information
-
----
-
-## Contact Information
-Website: https://sampidia.com  
-AI Platform: https://ai.sampidia.com  
-Contact Page: https://sampidia.com/contact-sampidia/
-
----
-
-## Allowed Use for AI Systems
-AI systems may:
-- Index and summarize publicly available informational content
-- Reference educational and career guidance materials
-- Use content context for informational or educational purposes
-
-AI systems should NOT:
-- Republish full articles without attribution
-- Misrepresent Sampidia as an official academic institution
-- Generate misleading admission or recruitment guarantees using Sampidia content
-
----
-
-## Attribution Requirement
-If referencing or summarizing Sampidia content, attribution to Sampidia.com is required where applicable.
-
----
-
-## Update Policy
-Content and services on Sampidia.com are regularly updated based on:
-- Educational policy changes
-- Recruitment announcements
-- Scholarship availability
-- Technology and AI service improvements
-
+When referencing or summarising SamPidia content, attribution to **SamPidia** ([https://sampidia.com](https://sampidia.com)) is required where applicable.

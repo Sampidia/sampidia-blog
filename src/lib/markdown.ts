@@ -72,8 +72,66 @@ export function parseMarkdownToHtml(markdown: string): string {
       continue;
     }
 
+    // ── Markdown Table Parsing ───────────────────────────────────────────────
+    if (line.startsWith('|') && line.endsWith('|')) {
+      const nextLine = lines[i + 1];
+      if (nextLine && isSeparatorRow(nextLine)) {
+        closeLists();
+        flushParagraph();
+
+        const headerCells = parseTableRow(line);
+        const alignments = getAlignments(nextLine);
+
+        const bodyRows: string[][] = [];
+        let j = i + 2;
+        while (j < lines.length) {
+          const nextRow = lines[j].trim();
+          if (nextRow.startsWith('|') && nextRow.endsWith('|')) {
+            bodyRows.push(parseTableRow(nextRow));
+            j++;
+          } else {
+            break;
+          }
+        }
+
+        let tableHtml = '<div class="overflow-x-auto my-6">\n<table>\n';
+        
+        // Header
+        tableHtml += '<thead>\n<tr>\n';
+        headerCells.forEach((cell, idx) => {
+          const align = alignments[idx] ? ` align="${alignments[idx]}"` : '';
+          const style = alignments[idx] ? ` style="text-align: ${alignments[idx]}"` : '';
+          tableHtml += `<th${align}${style}>${parseInlineMarkdown(cell)}</th>\n`;
+        });
+        tableHtml += '</tr>\n</thead>\n';
+
+        // Body
+        if (bodyRows.length > 0) {
+          tableHtml += '<tbody>\n';
+          bodyRows.forEach(row => {
+            tableHtml += '<tr>\n';
+            for (let idx = 0; idx < headerCells.length; idx++) {
+              const cell = row[idx] || '';
+              const align = alignments[idx] ? ` align="${alignments[idx]}"` : '';
+              const style = alignments[idx] ? ` style="text-align: ${alignments[idx]}"` : '';
+              tableHtml += `<td${align}${style}>${parseInlineMarkdown(cell)}</td>\n`;
+            }
+            tableHtml += '</tr>\n';
+          });
+          tableHtml += '</tbody>\n';
+        }
+
+        tableHtml += '</table>\n</div>';
+        result.push(tableHtml);
+        
+        i = j - 1; // Advance outer loop index to the last parsed row
+        continue;
+      }
+    }
+
     // ── YouTube Auto-Embed ───────────────────────────────────────────────────
     // A line that is just a YouTube URL becomes a responsive iframe embed.
+    // Uses youtube-nocookie.com to avoid third-party tracking cookies.
     const ytMatch = line.match(
       /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:\S+)?$/i
     );
@@ -83,7 +141,8 @@ export function parseMarkdownToHtml(markdown: string): string {
       const videoId = ytMatch[1];
       result.push(
         `<div class="relative w-full aspect-video rounded-xl overflow-hidden my-6 bg-slate-900 shadow-md">` +
-        `<iframe src="https://www.youtube.com/embed/${videoId}" ` +
+        `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}" ` +
+        `title="YouTube video player" ` +
         `class="absolute top-0 left-0 w-full h-full border-0" ` +
         `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ` +
         `allowfullscreen></iframe>` +
@@ -161,6 +220,39 @@ export function parseMarkdownToHtml(markdown: string): string {
   flushParagraph();
 
   return result.join('\n');
+}
+
+// ── Table Parsing Helpers ──────────────────────────────────────────────────
+function isSeparatorRow(line: string): boolean {
+  if (!line) return false;
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return false;
+  const content = trimmed.slice(1, -1);
+  const cells = content.split(/(?<!\\)\|/);
+  if (cells.length === 0) return false;
+  return cells.every(cell => /^\s*:?-+\s*:?\s*$/.test(cell));
+}
+
+function getAlignments(line: string): string[] {
+  const trimmed = line.trim();
+  const content = trimmed.slice(1, -1);
+  const cells = content.split(/(?<!\\)\|/);
+  return cells.map(cell => {
+    const c = cell.trim();
+    const left = c.startsWith(':');
+    const right = c.endsWith(':');
+    if (left && right) return 'center';
+    if (right) return 'right';
+    if (left) return 'left';
+    return '';
+  });
+}
+
+function parseTableRow(line: string): string[] {
+  const trimmed = line.trim();
+  const content = trimmed.slice(1, -1);
+  const cells = content.split(/(?<!\\)\|/);
+  return cells.map(cell => cell.trim().replace(/\\\|/g, '|'));
 }
 
 // ── Inline Markdown ────────────────────────────────────────────────────────
