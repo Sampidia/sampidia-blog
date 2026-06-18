@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface CusdisCommentsProps {
   post: {
@@ -12,9 +12,37 @@ interface CusdisCommentsProps {
 
 export default function CusdisComments({ post }: CusdisCommentsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isIntersected, setIsIntersected] = useState(false);
   const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'c3da25cf-9ca7-4de0-8e6d-74d1a0be5fe5';
 
+  // Setup Intersection Observer to detect when the comment thread container approaches the viewport
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isIntersected) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setIsIntersected(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '200px', // pre-load comments when 200px above/below viewport
+      }
+    );
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isIntersected]);
+
+  useEffect(() => {
+    if (!isIntersected) return;
+
     const pageUrl = `${window.location.origin}/${post.slug}`;
 
     if (!containerRef.current) return;
@@ -77,7 +105,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
       window.removeEventListener('message', handleMessage);
       clearInterval(pollInterval);
     };
-  }, [post.id, post.title, post.slug, appId]);
+  }, [post.id, post.title, post.slug, appId, isIntersected]);
 
   return (
     <div className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
@@ -85,7 +113,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
         Discussion
       </h3>
 
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[600px]">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[250px]">
         <div ref={containerRef} id="cusdis_thread" />
       </div>
     </div>

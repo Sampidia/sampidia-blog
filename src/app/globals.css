@@ -36,9 +36,13 @@ body {
 /* Custom Typography for Blog Content rendering */
 .prose {
   max-width: 100%;
+  min-width: 0;
   line-height: 1.8;
   font-size: 1.1rem;
   color: #1e293b;
+  /* Prevent any unbreakable string (e.g. long URLs) from overflowing on mobile */
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .dark .prose {
@@ -84,6 +88,8 @@ body {
   margin-top: 0px;
   margin-bottom: 1.5rem;
   color: #334155;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .dark .prose p {
@@ -95,6 +101,9 @@ body {
   text-decoration: underline;
   text-underline-offset: 4px;
   font-weight: 600;
+  /* Long hyperlink URLs must never push the container wider than the viewport */
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .prose a:hover {
@@ -104,6 +113,10 @@ body {
 .prose ul, .prose ol {
   margin-bottom: 1.5rem;
   padding-left: 1.5rem;
+  /* Constrain list items so they don't escape the column on mobile */
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .prose ul {
@@ -117,6 +130,8 @@ body {
 .prose li {
   margin-bottom: 0.5rem;
   color: #334155;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .dark .prose li {

@@ -104,7 +104,7 @@ export default async function PostPage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
           {/* ── ARTICLE ──────────────────────────────────────────── */}
-          <article className="lg:col-span-2" itemScope itemType="https://schema.org/BlogPosting">
+          <article className="lg:col-span-2 min-w-0" itemScope itemType="https://schema.org/BlogPosting">
 
             {/* Breadcrumb */}
             <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 mb-5">
@@ -181,6 +181,7 @@ export default async function PostPage({ params }: Props) {
                 priority
                 fetchPriority="high"
                 sizes="(max-width: 1024px) 100vw, 66vw"
+                quality={60}
                 itemProp="image"
               />
             </div>

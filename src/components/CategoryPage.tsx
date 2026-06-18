@@ -58,6 +58,7 @@ export default async function CategoryPage({ category }: CategoryPageProps) {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : undefined}
+                  quality={70}
                 />
               </Link>
               

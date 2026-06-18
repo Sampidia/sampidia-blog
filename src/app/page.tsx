@@ -49,6 +49,7 @@ export default async function Home() {
                     priority
                     fetchPriority="high"
                     sizes="(max-width: 1024px) 100vw, 66vw"
+                    quality={70}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                 </Link>

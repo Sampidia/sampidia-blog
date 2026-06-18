@@ -35,11 +35,11 @@ export function parseMarkdownToHtml(markdown: string): string {
 
   if (!cleanText) return '';
 
-  // If the content already looks like HTML, return it unchanged.
-  // This preserves backup-posts.json entries that already contain HTML.
+  // If the content already looks like HTML, return it with YouTube iframes
+  // replaced by facades — this covers backup-posts.json HTML content.
   const isHtml = /^\s*<[a-zA-Z0-9]+[^>]*>/.test(cleanText);
   if (isHtml) {
-    return cleanText;
+    return applyYoutubeFacadeToHtml(cleanText);
   }
 
   const lines = cleanText.split('\n');
@@ -129,8 +129,9 @@ export function parseMarkdownToHtml(markdown: string): string {
       }
     }
 
-    // ── YouTube Auto-Embed ───────────────────────────────────────────────────
-    // A line that is just a YouTube URL becomes a responsive iframe embed.
+    // ── YouTube Facade (Lazy Embed) ──────────────────────────────────────────
+    // A line that is just a YouTube URL becomes a facade: a clickable thumbnail
+    // that only loads the real iframe (and YouTube's heavy JS) on user click.
     // Uses youtube-nocookie.com to avoid third-party tracking cookies.
     const ytMatch = line.match(
       /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:\S+)?$/i
@@ -139,13 +140,35 @@ export function parseMarkdownToHtml(markdown: string): string {
       closeLists();
       flushParagraph();
       const videoId = ytMatch[1];
+      const thumbUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      // The onclick replaces the facade with the real iframe in-place.
+      // autoplay=1 starts playback immediately after the user clicks.
       result.push(
-        `<div class="relative w-full aspect-video rounded-xl overflow-hidden my-6 bg-slate-900 shadow-md">` +
-        `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}" ` +
-        `title="YouTube video player" ` +
-        `class="absolute top-0 left-0 w-full h-full border-0" ` +
-        `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ` +
-        `allowfullscreen></iframe>` +
+        `<div class="yt-facade relative w-full aspect-video rounded-xl overflow-hidden my-6 bg-slate-900 shadow-md cursor-pointer" ` +
+        `onclick="(function(el){` +
+          `var ifr=document.createElement('iframe');` +
+          `ifr.src='https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1';` +
+          `ifr.title='YouTube video player';` +
+          `ifr.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';` +
+          `ifr.allowFullscreen=true;` +
+          `ifr.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:0;';` +
+          `el.innerHTML='';` +
+          `el.appendChild(ifr);` +
+          `el.onclick=null;` +
+        `})(this)" ` +
+        `aria-label="Play YouTube video" role="button" tabindex="0" ` +
+        `onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">` +
+          `<img ` +
+            `src="${thumbUrl}" ` +
+            `alt="YouTube video thumbnail" ` +
+            `loading="lazy" ` +
+            `decoding="async" ` +
+            `style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />` +
+          `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);">` +
+            `<div style="width:68px;height:48px;background:#ff0000;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,0.5);transition:transform 0.15s;">` +
+              `<svg viewBox="0 0 24 24" width="28" height="28" fill="white"><polygon points="9.5,7.5 9.5,16.5 17,12"/></svg>` +
+            `</div>` +
+          `</div>` +
         `</div>`
       );
       continue;
@@ -279,4 +302,45 @@ function parseInlineMarkdown(text: string): string {
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
   return html;
+}
+
+// ── YouTube Facade Helper ──────────────────────────────────────────────────
+// Replaces any eager YouTube <iframe> found inside already-HTML content with
+// the same click-to-load facade used for markdown YouTube URL lines.
+function applyYoutubeFacadeToHtml(html: string): string {
+  // Match <iframe> tags whose src points to youtube.com or youtube-nocookie.com
+  return html.replace(
+    /<iframe[^>]*src=["']https?:\/\/(?:www\.)?(?:youtube(?:-nocookie)?\.com)\/embed\/([a-zA-Z0-9_-]{11})[^"']*["'][^>]*(?:\/>|><\/iframe>)/gi,
+    (_match, videoId) => {
+      const thumbUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      return (
+        `<div class="yt-facade relative w-full aspect-video rounded-xl overflow-hidden my-6 bg-slate-900 shadow-md cursor-pointer" ` +
+        `onclick="(function(el){` +
+          `var ifr=document.createElement('iframe');` +
+          `ifr.src='https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1';` +
+          `ifr.title='YouTube video player';` +
+          `ifr.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';` +
+          `ifr.allowFullscreen=true;` +
+          `ifr.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:0;';` +
+          `el.innerHTML='';` +
+          `el.appendChild(ifr);` +
+          `el.onclick=null;` +
+        `})(this)" ` +
+        `aria-label="Play YouTube video" role="button" tabindex="0" ` +
+        `onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">` +
+          `<img ` +
+            `src="${thumbUrl}" ` +
+            `alt="YouTube video thumbnail" ` +
+            `loading="lazy" ` +
+            `decoding="async" ` +
+            `style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />` +
+          `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);">` +
+            `<div style="width:68px;height:48px;background:#ff0000;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,0.5);transition:transform 0.15s;">` +
+              `<svg viewBox="0 0 24 24" width="28" height="28" fill="white"><polygon points="9.5,7.5 9.5,16.5 17,12"/></svg>` +
+            `</div>` +
+          `</div>` +
+        `</div>`
+      );
+    }
+  );
 }
