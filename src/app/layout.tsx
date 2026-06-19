@@ -89,11 +89,10 @@ export default function RootLayout({
         </Script>
 
         {/* Google AdSense */}
-        <Script
+        <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
           crossOrigin="anonymous"
-          strategy="lazyOnload"
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#fcfcfd] dark:bg-[#070b13] text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200">

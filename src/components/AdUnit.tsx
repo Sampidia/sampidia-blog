@@ -11,6 +11,17 @@ export default function AdUnit({ slot, className = '' }: AdUnitProps) {
   const adRef = useRef<HTMLModElement>(null);
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-1169009766287256';
 
+  // Map friendly named slot keys to their respective 10-digit numeric AdSense Slot IDs.
+  // This allows keeping readable slot names in the codebase and defining the actual IDs in .env.
+  const resolvedSlot = slot ? (
+    slot === 'homepage-top' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_TOP :
+    slot === 'homepage-bottom' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM :
+    slot === 'in-article-top' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_TOP :
+    slot === 'in-article-bottom' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_BOTTOM :
+    slot === 'post-sidebar' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_SIDEBAR :
+    slot // fallback if a direct numeric ID is passed
+  ) : undefined;
+
   useEffect(() => {
     try {
       // @ts-ignore
@@ -30,7 +41,7 @@ export default function AdUnit({ slot, className = '' }: AdUnitProps) {
           ref={adRef}
           className="adsbygoogle block"
           data-ad-client={adsenseId}
-          data-ad-slot={slot || 'default-slot'}
+          data-ad-slot={resolvedSlot || 'default-slot'}
           data-ad-format="auto"
           data-full-width-responsive="true"
           style={{ display: 'block', minHeight: '90px' }}
