@@ -14,7 +14,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       },
     ],
-    sitemap: 'https://sampidia.com/sitemap.xml',
+    sitemap: [
+      'https://sampidia.com/sitemap.xml',
+      'https://sampidia.com/news-sitemap.xml',
+    ],
     host: 'https://sampidia.com',
   };
 }
