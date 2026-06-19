@@ -16,9 +16,11 @@ export async function GET() {
     const posts = await getPosts();
     const baseUrl = 'https://sampidia.com';
 
-    // Google News only wants articles from the last 48 hours
+    // Google News only wants articles from the last 48 hours.
+    // Set to start of the day 2 days ago to avoid filtering out day-precision dates.
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    twoDaysAgo.setHours(0, 0, 0, 0);
 
     const recentPosts = posts.filter((post) => {
       const postDate = new Date(post.date);
