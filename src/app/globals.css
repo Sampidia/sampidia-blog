@@ -188,3 +188,53 @@ body {
 .dark .prose td {
   border-color: #1f2937;
 }
+
+/* ── Responsive iframes (YouTube and any other embeds) ───────────────────────
+   Raw <iframe> tags with fixed width/height attributes blow out on mobile.
+   We wrap them in a 16:9 intrinsic-ratio container and force max-width: 100%.
+   This is a catch-all for iframes that bypass the YouTube facade (e.g. iframes
+   pasted directly as HTML, or non-YouTube embeds).
+──────────────────────────────────────────────────────────────────────────── */
+
+/* Wraps a bare <iframe> inside an aspect-ratio container */
+.prose iframe {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  /* fixed height attributes on iframes are overridden by the container below */
+  border: 0;
+}
+
+/* When an iframe is the only child of a div (the common YouTube embed pattern),
+   turn the parent into a 16:9 intrinsic-ratio box */
+.prose div:has(> iframe:only-child) {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  background: #0f172a;
+}
+
+.prose div:has(> iframe:only-child) > iframe {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── YouTube Facade wrapper ───────────────────────────────────────────────── */
+.yt-facade {
+  box-sizing: border-box;
+  max-width: 100%;
+  /* Ensure the facade itself never escapes its grid column */
+  contain: layout;
+}
+
+/* Play button hover lift */
+.yt-facade:hover > div > div {
+  transform: scale(1.1);
+}
+
