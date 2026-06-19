@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X, BookOpen } from 'lucide-react';
+import { Menu, X, BookOpen, Search } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import SearchModal from './SearchModal';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
@@ -26,6 +28,7 @@ export default function Header() {
     { name: 'Tech', path: '/tech' },
     { name: 'Sports', path: '/sports' },
     { name: 'Jobs', path: '/jobs' },
+    { name: 'Entertainment', path: '/entertainment' },
     { name: 'Lifestyle', path: '/lifestyle' }
   ];
 
@@ -77,12 +80,34 @@ export default function Header() {
                 );
               })}
             </nav>
+            
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 rounded-lg text-slate-600 hover:text-sky-700 dark:text-slate-400 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors"
+              aria-label="Search articles"
+              type="button"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
             <ThemeToggle />
           </div>
 
-          {/* Mobile Theme Toggle & Hamburger */}
-          <div className="flex md:hidden items-center gap-3">
+          {/* Mobile Actions (Search, Theme, Hamburger) */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 rounded-lg text-slate-600 hover:text-sky-700 dark:text-slate-400 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors"
+              aria-label="Search articles"
+              type="button"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
             <ThemeToggle />
+            
             <button
               onClick={() => setIsOpen(!isOpen)}
               type="button"
@@ -96,6 +121,9 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Mobile Menu Drawer */}
       <div

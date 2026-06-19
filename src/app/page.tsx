@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-const CATEGORIES = ['News', 'Tech', 'Sports', 'Jobs', 'Lifestyle'];
+const CATEGORIES = ['News', 'Tech', 'Sports', 'Jobs', 'Entertainment', 'Lifestyle'];
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', {

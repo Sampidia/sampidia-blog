@@ -74,6 +74,8 @@ function normalizeCategory(raw: string): string {
     case 'lifestyle':
     case 'life':
       return 'Lifestyle';
+    case 'entertainment':
+      return 'Entertainment';
     default:
       // Title-case the raw value as a best-effort fallback
       return raw.trim().charAt(0).toUpperCase() + raw.trim().slice(1).toLowerCase();
@@ -93,6 +95,8 @@ export function getAuthorForCategory(category: string): Author {
       return { name: 'Joy', avatar: '/images/avatars/Joy.webp' };
     case 'sports':
       return { name: 'John', avatar: '/images/avatars/John.webp' };
+    case 'entertainment':
+      return { name: 'Olivia', avatar: '/images/avatars/Olivia.webp' };
     default:
       return { name: 'Becky', avatar: '/images/avatars/Becky.webp' };
   }

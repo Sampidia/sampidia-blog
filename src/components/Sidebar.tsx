@@ -13,6 +13,7 @@ export default function Sidebar({ popularPosts }: SidebarProps) {
     { name: 'Tech', path: '/tech' },
     { name: 'Sports', path: '/sports' },
     { name: 'Jobs', path: '/jobs' },
+    { name: 'Entertainment', path: '/entertainment' },
     { name: 'Lifestyle', path: '/lifestyle' }
   ];
 
