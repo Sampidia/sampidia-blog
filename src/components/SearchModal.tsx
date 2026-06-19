@@ -138,20 +138,33 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             className="w-full bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border-none outline-none focus:ring-0 text-base"
           />
 
-          {isLoading ? (
+          {isLoading && (
             <Loader2 className="w-5 h-5 text-sky-500 animate-spin flex-shrink-0" />
-          ) : query ? (
+          )}
+
+          {query && !isLoading && (
             <button
               onClick={() => setQuery('')}
               className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              title="Clear search"
             >
               <X className="w-4 h-4" />
             </button>
-          ) : (
+          )}
+
+          <div className="flex items-center gap-2 border-l border-slate-100 dark:border-slate-800/80 pl-3 flex-shrink-0">
             <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-xs text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 rounded bg-slate-50 dark:bg-slate-950 font-sans font-medium">
               ESC
             </kbd>
-          )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 text-red-500 dark:text-red-400 transition-all duration-200 flex items-center justify-center hover:scale-105"
+              aria-label="Close search"
+              title="Close search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Results Body */}
