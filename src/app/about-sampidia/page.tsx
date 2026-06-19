@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { getMarkdownContent, parseMarkdownToHtml } from '@/lib/markdown';
+import AdUnit from '@/components/AdUnit';
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -19,6 +20,7 @@ export default async function Page() {
         className="prose dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
+      <AdUnit slot="homepage-bottom" className="mt-12" />
     </article>
   );
 }

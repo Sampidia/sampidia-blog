@@ -12,13 +12,31 @@ export default function AdUnit({ slot, className = '' }: AdUnitProps) {
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-1169009766287256';
 
   // Map friendly named slot keys to their respective 10-digit numeric AdSense Slot IDs.
-  // This allows keeping readable slot names in the codebase and defining the actual IDs in .env.
+  // This supports all slots used across the website: homepage, categories, sidebar, and article pages.
+  // Gracious fallback hierarchy: if a specific slot ID is missing, it falls back to the configured homepage/global top or bottom slot.
   const resolvedSlot = slot ? (
-    slot === 'homepage-top' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_TOP :
-    slot === 'homepage-bottom' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM :
-    slot === 'in-article-top' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_TOP :
-    slot === 'in-article-bottom' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_BOTTOM :
-    slot === 'post-sidebar' ? process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_SIDEBAR :
+    // Top Banner Ads
+    slot === 'homepage-top' || slot === 'category-top' || slot === 'in-article-top' ? (
+      (slot === 'homepage-top' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_TOP) ||
+      (slot === 'category-top' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_CATEGORY_TOP) ||
+      (slot === 'in-article-top' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_TOP) ||
+      process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_TOP // global top fallback
+    ) :
+    // Bottom Banner Ads
+    slot === 'homepage-bottom' || slot === 'category-bottom' || slot === 'in-article-bottom' ? (
+      (slot === 'homepage-bottom' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM) ||
+      (slot === 'category-bottom' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_CATEGORY_BOTTOM) ||
+      (slot === 'in-article-bottom' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_BOTTOM) ||
+      process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM // global bottom fallback
+    ) :
+    // Sidebar/Side Vertical Ads
+    slot === 'sidebar-top' || slot === 'sidebar-bottom' || slot === 'post-sidebar' ? (
+      (slot === 'sidebar-top' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR_TOP) ||
+      (slot === 'sidebar-bottom' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR_BOTTOM) ||
+      (slot === 'post-sidebar' && process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_SIDEBAR) ||
+      process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_SIDEBAR || // global sidebar fallback
+      process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM // absolute fallback
+    ) :
     slot // fallback if a direct numeric ID is passed
   ) : undefined;
 
