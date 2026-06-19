@@ -1,6 +1,34 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // Redirect old /blog page to homepage
+      {
+        source: '/blog',
+        destination: '/',
+        permanent: true, // 301 redirect
+      },
+      // Redirect old /category/general to homepage
+      {
+        source: '/category/general',
+        destination: '/',
+        permanent: true,
+      },
+      // Redirect all paginated /category/general/page/1, /page/2, etc.
+      {
+        source: '/category/general/page/:page*',
+        destination: '/',
+        permanent: true,
+      },
+      // Catch-all for any other /category/* paths
+      {
+        source: '/category/:path*',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
