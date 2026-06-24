@@ -32,7 +32,7 @@ export default function SafeImage({
           top: 0,
           right: 0,
           bottom: 0,
-          objectFit: restProps.className?.includes('object-cover') ? ('cover' as const) : undefined,
+          objectFit: className?.includes('object-cover') ? ('cover' as const) : undefined,
           ...style,
         }
       : style;
