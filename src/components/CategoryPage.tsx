@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from '@/components/SafeImage';
 import Link from 'next/link';
 import { getPostsByCategory } from '@/lib/posts';
 import AdUnit from './AdUnit';

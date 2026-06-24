@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/SafeImage';
 import AdUnit from './AdUnit';
 import { Post } from '@/lib/posts';
 

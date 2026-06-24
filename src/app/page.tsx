@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from '@/components/SafeImage';
 import Link from 'next/link';
 import { getPosts, getPopularPosts } from '@/lib/posts';
 import Sidebar from '@/components/Sidebar';

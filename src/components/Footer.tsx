@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/SafeImage';
 import { SVGProps } from 'react';
 import { Mail, ShieldAlert } from 'lucide-react';
 
