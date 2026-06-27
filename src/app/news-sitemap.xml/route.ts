@@ -32,7 +32,7 @@ export async function GET() {
     const urlEntries = recentPosts
       .slice(0, 1000) // Google News sitemap limit
       .map((post) => {
-        const title = escapeXml(post.title);
+        const title = cdata(sanitizeXml(post.title));
         const postUrl = `${baseUrl}/${post.slug}`;
         // Format date as W3C datetime (YYYY-MM-DD or full ISO)
         const rawDate = new Date(post.date);
@@ -70,16 +70,26 @@ export async function GET() {
   }
 }
 
-function escapeXml(unsafe: string): string {
-  if (!unsafe) return '';
-  return unsafe.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-      default: return c;
-    }
-  });
+/**
+ * Wraps text in a CDATA section, safely escaping any embedded "]]>" sequences.
+ * This lets ANY character appear in XML content without escaping.
+ */
+function cdata(text: string): string {
+  return `<![CDATA[${text.replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`;
+}
+
+/**
+ * Strips characters that are illegal in XML 1.0 regardless of encoding:
+ *   - Control chars: U+0000–U+0008, U+000B, U+000C, U+000E–U+001F, U+007F
+ *   - Windows-1252 "smart" chars that appear as invalid bytes in UTF-8 streams
+ */
+function sanitizeXml(text: string): string {
+  if (!text) return '';
+  return text
+    // Remove XML 1.0 illegal control characters (keep \t \n \r)
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    // Normalize Windows-1252 curly quotes / dashes to their ASCII equivalents
+    .replace(/[\u2018\u2019]/g, "'")   // ' '  → '
+    .replace(/[\u201C\u201D]/g, '"')   // " "  → "
+    .replace(/[\u2013\u2014]/g, '-');  // – —  → -
 }
