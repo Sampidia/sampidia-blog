@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Purge the main fetch cache for posts (so Next.js fetches fresh data from Google Sheets)
-    revalidateTag('posts');
+    revalidateTag('posts', 'max');
 
     // 2. Perform targeted revalidation of paths
     // Always revalidate the homepage to show the new post list
