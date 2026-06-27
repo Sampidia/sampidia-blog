@@ -1,0 +1,94 @@
+function doPost(e) {
+  // Get the active spreadsheet and the first sheet
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getActiveSheet(); 
+
+  var lastRow = sheet.getLastRow();
+  var lastColumn = sheet.getLastColumn();
+
+  var slug = "";
+  var category = "";
+
+  // 1. Check if the spreadsheet has any active data rows
+  if (lastRow > 0 && lastColumn > 0) {
+    // 2. Wrap text across the active row boundaries
+    sheet.getRange(1, 1, lastRow, lastColumn).setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+    
+    // 3. Force-collapse row heights to exactly 21px
+    sheet.setRowHeightsForced(1, lastRow, 21);
+
+    // 4. Read headers and extract slug/category of the newly added post in the last row
+    if (lastRow > 1) {
+      var headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
+      var slugColIdx = headers.indexOf("slug");
+      var categoryColIdx = headers.indexOf("category");
+
+      if (slugColIdx !== -1) {
+        slug = sheet.getRange(lastRow, slugColIdx + 1).getValue();
+      }
+      if (categoryColIdx !== -1) {
+        category = sheet.getRange(lastRow, categoryColIdx + 1).getValue();
+      }
+    }
+  }
+
+  // 5. Fire the targeted revalidation webhook
+  triggerRevalidation(slug, category);
+
+  // 6. Return a success response to n8n
+  return ContentService.createTextOutput("Layout updated and webhook fired successfully.");
+}
+
+function triggerRevalidation(slug, category) {
+  var url = "https://www.sampidia.com/api/revalidate?secret=pidia935467497key1_20";
+  
+  if (slug) {
+    url += "&slug=" + encodeURIComponent(slug);
+  }
+  if (category) {
+    url += "&category=" + encodeURIComponent(category);
+  }
+
+  try {
+    var response = UrlFetchApp.fetch(url);
+    Logger.log("Successfully notified frontend via webhook. Response: " + response.getContentText());
+  } catch (err) {
+    Logger.log("Failed to notify frontend: " + err.message);
+  }
+}
+
+// Adds a custom menu to the spreadsheet when opened (for manual sync fallback)
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('SamPidia Admin')
+      .addItem('Publish & Sync Website', 'manualSync')
+      .addToUi();
+}
+
+// Function triggered when the menu item is clicked
+function manualSync() {
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.alert(
+    'Confirm Publish', 
+    'Are you sure you want to format the spreadsheet and sync the website? This will update the homepage and categories.', 
+    ui.ButtonSet.YES_NO
+  );
+  
+  if (response == ui.Button.YES) {
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = spreadsheet.getActiveSheet();
+    var lastRow = sheet.getLastRow();
+    var lastColumn = sheet.getLastColumn();
+    
+    if (lastRow > 0 && lastColumn > 0) {
+      sheet.getRange(1, 1, lastRow, lastColumn).setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+      sheet.setRowHeightsForced(1, lastRow, 21);
+    }
+    
+    // Fire the revalidation webhook
+    // Leave slug/category empty for a global sync of lists and layout
+    triggerRevalidation("", "");
+    
+    ui.alert('Success', 'Website sync triggered successfully!', ui.ButtonSet.OK);
+  }
+}
