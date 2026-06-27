@@ -23,7 +23,9 @@ export async function GET() {
     twoDaysAgo.setHours(0, 0, 0, 0);
 
     const recentPosts = posts.filter((post) => {
+      if (!post.date) return false;
       const postDate = new Date(post.date);
+      if (isNaN(postDate.getTime())) return false;
       return postDate >= twoDaysAgo;
     });
 
@@ -33,7 +35,8 @@ export async function GET() {
         const title = escapeXml(post.title);
         const postUrl = `${baseUrl}/${post.slug}`;
         // Format date as W3C datetime (YYYY-MM-DD or full ISO)
-        const pubDate = new Date(post.date).toISOString();
+        const rawDate = new Date(post.date);
+        const pubDate = !isNaN(rawDate.getTime()) ? rawDate.toISOString() : new Date().toISOString();
 
         return `
   <url>

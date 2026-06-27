@@ -40,17 +40,17 @@ function cleanDropboxUrl(url: string): string {
  */
 function parseDateString(rawDate: string): string {
   if (!rawDate) return '';
+  let candidate = rawDate;
   // Match DD-MM-YYYY or DD/MM/YYYY
   const ddmmyyyy = rawDate.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
   if (ddmmyyyy) {
     const [, day, month, year] = ddmmyyyy;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    candidate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
-  // Match YYYY-MM-DD already (return as-is)
-  const yyyymmdd = rawDate.match(/^\d{4}-\d{2}-\d{2}/);
-  if (yyyymmdd) return rawDate;
-  // Fallback — return as-is and hope it works
-  return rawDate;
+  // Validate the resulting date — return '' if it's unparseable
+  const d = new Date(candidate);
+  if (isNaN(d.getTime())) return '';
+  return candidate;
 }
 
 /**

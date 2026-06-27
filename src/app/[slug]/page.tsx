@@ -11,6 +11,21 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+/** Returns a valid ISO string, or undefined if the date is missing/invalid. */
+function safeISODate(dateStr: string): string | undefined {
+  if (!dateStr) return undefined;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+/** Returns a formatted date string, or an empty string on invalid dates. */
+function safeFormatDate(dateStr: string, options: Intl.DateTimeFormatOptions): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', options);
+}
+
 export async function generateStaticParams() {
   const posts = await getPosts();
   return posts.map((post) => ({ slug: post.slug }));
@@ -70,7 +85,7 @@ export default async function PostPage({ params }: Props) {
     '@type': 'BlogPosting',
     headline: post.title,
     image: post.coverImage,
-    datePublished: new Date(post.date).toISOString(),
+    datePublished: safeISODate(post.date),
     description: post.metaDescription,
     url: `${siteUrl}/${post.slug}`,
     author: {
@@ -161,7 +176,7 @@ export default async function PostPage({ params }: Props) {
 
               <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 ml-auto">
                 <time dateTime={post.date} itemProp="datePublished">
-                  {new Date(post.date).toLocaleDateString('en-US', {
+                  {safeFormatDate(post.date, {
                     weekday: 'short',
                     month: 'long',
                     day: 'numeric',
@@ -265,7 +280,7 @@ export default async function PostPage({ params }: Props) {
                         {relPost.category}
                       </span>
                       <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                        {new Date(relPost.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {safeFormatDate(relPost.date, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white line-clamp-2 hover:text-sky-600 dark:hover:text-sky-400 transition-colors leading-snug font-heading">

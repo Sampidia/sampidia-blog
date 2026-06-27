@@ -49,11 +49,12 @@ export default function Sidebar({ popularPosts }: SidebarProps) {
                   {post.title}
                 </h4>
                 <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
-                  {new Date(post.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  {(() => {
+                    const d = post.date ? new Date(post.date) : null;
+                    return d && !isNaN(d.getTime())
+                      ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : '';
+                  })()}
                 </p>
               </div>
             </Link>

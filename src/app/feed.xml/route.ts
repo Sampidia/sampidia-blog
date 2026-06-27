@@ -11,7 +11,8 @@ export async function GET() {
         const title = escapeXml(post.title);
         const description = escapeXml(post.metaDescription || post.title);
         const url = `${baseUrl}/${post.slug}`;
-        const pubDate = new Date(post.date).toUTCString();
+        const rawDate = post.date ? new Date(post.date) : null;
+        const pubDate = rawDate && !isNaN(rawDate.getTime()) ? rawDate.toUTCString() : new Date().toUTCString();
         const author = escapeXml(post.author?.name || 'SamPidia Team');
         const category = escapeXml(post.category);
 

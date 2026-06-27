@@ -20,12 +20,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/privacy-policy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${BASE_URL}/${post.slug}`,
-    lastModified: new Date(post.date),
-    changeFrequency: 'weekly',
-    priority: 0.9,
-  }));
+  const postPages: MetadataRoute.Sitemap = posts.map((post) => {
+    const d = post.date ? new Date(post.date) : null;
+    const lastModified = d && !isNaN(d.getTime()) ? d : new Date();
+    return {
+      url: `${BASE_URL}/${post.slug}`,
+      lastModified,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    };
+  });
 
   return [...staticPages, ...postPages];
 }

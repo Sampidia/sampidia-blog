@@ -68,11 +68,12 @@ export default async function CategoryPage({ category }: CategoryPageProps) {
                     {post.category}
                   </span>
                   <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                    {new Date(post.date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
+                    {(() => {
+                      const d = post.date ? new Date(post.date) : null;
+                      return d && !isNaN(d.getTime())
+                        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '';
+                    })()}
                   </span>
                 </div>
 
