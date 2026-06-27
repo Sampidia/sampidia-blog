@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { clearPostsCache } from '@/lib/posts';
 
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('secret');
@@ -16,6 +17,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Clear the in-memory cache in case of a warm serverless container
+    clearPostsCache();
+
     // 1. Purge the main fetch cache for posts (so Next.js fetches fresh data from Google Sheets)
     revalidateTag('posts', 'max');
 

@@ -208,47 +208,72 @@ function parseCSV(csvText: string): Record<string, string>[] {
   return result;
 }
 
+let cachedPosts: Post[] | null = null;
+let cacheExpiry = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export function clearPostsCache() {
+  cachedPosts = null;
+  cacheExpiry = 0;
+}
+
 export async function getPosts(): Promise<Post[]> {
+  const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
+  const now = Date.now();
+  if (cachedPosts && (isBuild || now < cacheExpiry)) {
+    return cachedPosts;
+  }
+
+  let posts: Post[] | null = null;
+
   try {
-    const res = await fetch(SPREADSHEET_URL, { next: { revalidate: 3600, tags: ['posts'] } });
+    const res = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
     const csvText = await res.text();
     const rawPosts = parseCSV(csvText);
     if (rawPosts && rawPosts.length > 0) {
-      const posts = rawPosts
+      const parsed = rawPosts
         .map(normalizePost)
         .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
-      if (posts.length > 0) {
-        return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (parsed.length > 0) {
+        posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       }
     }
   } catch (error) {
     console.error('Failed to fetch from Google Sheets, trying Dropbox...', error);
   }
 
-  const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
-  if (dropboxUrl) {
-    try {
-      const res = await fetch(dropboxUrl, { next: { revalidate: 3600, tags: ['posts'] } });
-      if (!res.ok) throw new Error('Dropbox fetch failed');
-      const rawPosts = await res.json();
-      if (Array.isArray(rawPosts)) {
-        const posts = rawPosts
-          .map(normalizePost)
-          .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
-        if (posts.length > 0) {
-          return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (!posts) {
+    const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
+    if (dropboxUrl) {
+      try {
+        const res = await fetch(dropboxUrl, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Dropbox fetch failed');
+        const rawPosts = await res.json();
+        if (Array.isArray(rawPosts)) {
+          const parsed = rawPosts
+            .map(normalizePost)
+            .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
+          if (parsed.length > 0) {
+            posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          }
         }
+      } catch (error) {
+        console.error('Failed to fetch from Dropbox, trying local JSON...', error);
       }
-    } catch (error) {
-      console.error('Failed to fetch from Dropbox, trying local JSON...', error);
     }
   }
 
-  const posts = (localPosts as any[])
-    .map(normalizePost)
-    .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
-  return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (!posts) {
+    posts = (localPosts as any[])
+      .map(normalizePost)
+      .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  cachedPosts = posts;
+  cacheExpiry = Date.now() + CACHE_TTL;
+  return posts;
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
