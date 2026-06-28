@@ -131,80 +131,74 @@ function normalizePost(raw: any): Post {
   };
 }
 
-function parseCSVLine(lineText: string): string[] {
-  const result: string[] = [];
+function parseCSV(csvText: string): Record<string, string>[] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
   let currentValue = '';
   let inQuotes = false;
-  for (let i = 0; i < lineText.length; i++) {
-    const char = lineText[i];
-    const nextChar = lineText[i + 1];
+
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i];
+    const nextChar = csvText[i + 1];
+
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
+        // Escaped double quote inside a quoted field
         currentValue += '"';
-        i++;
+        i++; // skip next quote
       } else {
+        // Toggle quote state
         inQuotes = !inQuotes;
       }
     } else if (char === ',') {
       if (inQuotes) {
         currentValue += char;
       } else {
-        result.push(currentValue);
+        currentRow.push(currentValue);
+        currentValue = '';
+      }
+    } else if (char === '\r' || char === '\n') {
+      if (inQuotes) {
+        currentValue += char;
+      } else {
+        // Handle \r\n
+        if (char === '\r' && nextChar === '\n') {
+          i++;
+        }
+        currentRow.push(currentValue);
+        if (currentRow.some(val => val.trim() !== '')) {
+          rows.push(currentRow);
+        }
+        currentRow = [];
         currentValue = '';
       }
     } else {
       currentValue += char;
     }
   }
-  result.push(currentValue);
-  return result;
-}
 
-function parseCSV(csvText: string): Record<string, string>[] {
-  const lines: string[] = [];
-  let currentLine = '';
-  let inQuotes = false;
-  for (let i = 0; i < csvText.length; i++) {
-    const char = csvText[i];
-    const nextChar = csvText[i + 1];
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        currentLine += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-        currentLine += char;
-      }
-    } else if (char === '\r' || char === '\n') {
-      if (inQuotes) {
-        currentLine += char;
-      } else {
-        if (char === '\r' && nextChar === '\n') {
-          i++;
-        }
-        if (currentLine.trim()) lines.push(currentLine);
-        currentLine = '';
-      }
-    } else {
-      currentLine += char;
+  // Push remaining data if any
+  if (currentValue || currentRow.length > 0) {
+    currentRow.push(currentValue);
+    if (currentRow.some(val => val.trim() !== '')) {
+      rows.push(currentRow);
     }
   }
-  if (currentLine.trim()) lines.push(currentLine);
 
-  if (lines.length === 0) return [];
-  const headerLine = lines[0];
-  const headers = parseCSVLine(headerLine);
+  if (rows.length === 0) return [];
 
+  const headers = rows[0].map(h => h.trim());
   const result: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const values = parseCSVLine(lines[i]);
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
     const obj: Record<string, string> = {};
     headers.forEach((header, index) => {
-      obj[header.trim()] = (values[index] || '').trim();
+      obj[header] = (row[index] || '').trim();
     });
     result.push(obj);
   }
+
   return result;
 }
 
