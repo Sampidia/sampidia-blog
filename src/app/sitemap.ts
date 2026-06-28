@@ -1,6 +1,11 @@
 import { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/posts';
 
+// Force dynamic rendering so getPosts() can use no-store fetch without crashing.
+// Vercel will still serve a cached version at the CDN edge.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const BASE_URL = 'https://sampidia.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
