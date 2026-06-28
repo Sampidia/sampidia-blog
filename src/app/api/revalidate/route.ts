@@ -35,6 +35,14 @@ export async function GET(request: NextRequest) {
     if (slug) {
       const cleanSlug = slug.trim().replace(/^\//, '');
       revalidatePath(`/${cleanSlug}`, 'page');
+
+      // Pre-warm the new post page in the background so the first visitor
+      // doesn't get a 404. This is especially needed for posts that were
+      // not pre-generated at build time (added after deployment).
+      const warmUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sampidia.com'}/${cleanSlug}`;
+      fetch(warmUrl, { method: 'GET', cache: 'no-store' }).catch(() => {
+        // Fire-and-forget — warming failure is non-critical
+      });
     }
 
     // Revalidate the category page if provided

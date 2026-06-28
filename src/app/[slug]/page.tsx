@@ -26,6 +26,10 @@ function safeFormatDate(dateStr: string, options: Intl.DateTimeFormatOptions): s
   return d.toLocaleDateString('en-US', options);
 }
 
+// Allow any slug not pre-generated at build time to render on demand.
+// This is the default in Next.js but we set it explicitly to be safe.
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   const posts = await getPosts();
   return posts.map((post) => ({ slug: post.slug }));
