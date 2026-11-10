@@ -221,14 +221,31 @@ export async function getPosts(): Promise<Post[]> {
   let posts: Post[] | null = null;
 
   try {
-    const res = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
+    const res = await fetch(SPREADSHEET_URL, {
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/csv,text/plain,*/*'
+      }
+    });
+
+    console.log(`[Google Sheets] Response Status: ${res.status}, Type: ${res.headers.get('content-type')}`);
+
     if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
     const csvText = await res.text();
+
+    console.log(`[Google Sheets] Received ${csvText.length} characters. Start: ${csvText.substring(0, 80).replace(/\n/g, ' ')}`);
+
+    if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+      throw new Error(`Google returned an HTML page instead of CSV: ${csvText.substring(0, 150)}`);
+    }
+
     const rawPosts = parseCSV(csvText);
     if (rawPosts && rawPosts.length > 0) {
       const parsed = rawPosts
         .map(normalizePost)
         .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
+      console.log(`[Google Sheets] Successfully parsed ${parsed.length} published posts.`);
       if (parsed.length > 0) {
         posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       }
