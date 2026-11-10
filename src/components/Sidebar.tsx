@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import Image from '@/components/SafeImage';
 import AdUnit from './AdUnit';
-import { Post } from '@/lib/posts';
+import { PostMeta } from '@/lib/posts';
 
 interface SidebarProps {
-  popularPosts: Post[];
+  popularPosts: PostMeta[];
 }
 
 export default function Sidebar({ popularPosts }: SidebarProps) {
