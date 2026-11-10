@@ -131,75 +131,114 @@ function normalizePost(raw: any): Post {
   };
 }
 
-function parseCSV(csvText: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentValue = '';
-  let inQuotes = false;
+function parseCSVToPosts(csvText: string): Post[] {
+  const len = csvText.length;
+  let i = 0;
 
-  for (let i = 0; i < csvText.length; i++) {
-    const char = csvText[i];
-    const nextChar = csvText[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        // Escaped double quote inside a quoted field
-        currentValue += '"';
-        i++; // skip next quote
-      } else {
-        // Toggle quote state
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',') {
-      if (inQuotes) {
-        currentValue += char;
-      } else {
-        currentRow.push(currentValue);
-        currentValue = '';
-      }
-    } else if (char === '\r' || char === '\n') {
-      if (inQuotes) {
-        currentValue += char;
-      } else {
-        // Handle \r\n
-        if (char === '\r' && nextChar === '\n') {
+  // 1. Parse header row
+  const headers: string[] = [];
+  while (i < len) {
+    let value = '';
+    if (csvText[i] === '"') {
+      i++; // skip opening quote
+      const start = i;
+      while (i < len) {
+        if (csvText[i] === '"') {
+          if (csvText[i + 1] === '"') {
+            i += 2;
+          } else {
+            break;
+          }
+        } else {
           i++;
         }
-        currentRow.push(currentValue);
-        if (currentRow.some(val => val.trim() !== '')) {
-          rows.push(currentRow);
-        }
-        currentRow = [];
-        currentValue = '';
       }
+      value = csvText.slice(start, i).replace(/""/g, '"');
+      if (csvText[i] === '"') i++; // skip closing quote
     } else {
-      currentValue += char;
+      const start = i;
+      while (i < len && csvText[i] !== ',' && csvText[i] !== '\r' && csvText[i] !== '\n') {
+        i++;
+      }
+      value = csvText.slice(start, i);
+    }
+
+    headers.push(value.trim());
+
+    if (i < len && csvText[i] === ',') {
+      i++;
+    } else if (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
+      if (csvText[i] === '\r' && csvText[i + 1] === '\n') i++;
+      i++;
+      break;
     }
   }
 
-  // Push remaining data if any
-  if (currentValue || currentRow.length > 0) {
-    currentRow.push(currentValue);
-    if (currentRow.some(val => val.trim() !== '')) {
-      rows.push(currentRow);
+  // 2. Parse data rows directly into Post objects (streaming without intermediate 2D arrays)
+  const posts: Post[] = [];
+  const headerCount = headers.length;
+
+  while (i < len) {
+    const row: Record<string, string> = {};
+    let colIndex = 0;
+    let hasContent = false;
+
+    while (i < len && colIndex < headerCount) {
+      let value = '';
+      if (csvText[i] === '"') {
+        i++; // skip opening quote
+        const start = i;
+        while (i < len) {
+          if (csvText[i] === '"') {
+            if (csvText[i + 1] === '"') {
+              i += 2;
+            } else {
+              break;
+            }
+          } else {
+            i++;
+          }
+        }
+        value = csvText.slice(start, i).replace(/""/g, '"');
+        if (csvText[i] === '"') i++; // skip closing quote
+      } else {
+        const start = i;
+        while (i < len && csvText[i] !== ',' && csvText[i] !== '\r' && csvText[i] !== '\n') {
+          i++;
+        }
+        value = csvText.slice(start, i);
+      }
+
+      if (value.trim() !== '') hasContent = true;
+      const header = headers[colIndex];
+      if (header) {
+        row[header] = value;
+      }
+      colIndex++;
+
+      if (i < len && csvText[i] === ',') {
+        i++;
+      } else if (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
+        if (csvText[i] === '\r' && csvText[i + 1] === '\n') i++;
+        i++;
+        break;
+      }
+    }
+
+    // Skip any extra trailing newlines
+    while (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
+      i++;
+    }
+
+    if (hasContent) {
+      const post = normalizePost(row);
+      if (post.status.toLowerCase() === 'published' && post.slug && post.title) {
+        posts.push(post);
+      }
     }
   }
 
-  if (rows.length === 0) return [];
-
-  const headers = rows[0].map(h => h.trim());
-  const result: Record<string, string>[] = [];
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    const obj: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      obj[header] = (row[index] || '').trim();
-    });
-    result.push(obj);
-  }
-
-  return result;
+  return posts;
 }
 
 let cachedPosts: Post[] | null = null;
@@ -240,15 +279,10 @@ export async function getPosts(): Promise<Post[]> {
       throw new Error(`Google returned an HTML page instead of CSV: ${csvText.substring(0, 150)}`);
     }
 
-    const rawPosts = parseCSV(csvText);
-    if (rawPosts && rawPosts.length > 0) {
-      const parsed = rawPosts
-        .map(normalizePost)
-        .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
-      console.log(`[Google Sheets] Successfully parsed ${parsed.length} published posts.`);
-      if (parsed.length > 0) {
-        posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      }
+    const parsed = parseCSVToPosts(csvText);
+    console.log(`[Google Sheets] Successfully parsed ${parsed.length} published posts.`);
+    if (parsed.length > 0) {
+      posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
   } catch (error) {
     console.error('Failed to fetch from Google Sheets, trying Dropbox...', error);
