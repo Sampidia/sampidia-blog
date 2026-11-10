@@ -12,14 +12,13 @@ export async function GET(request: Request) {
 
     const posts = await getPosts();
     
-    // Filter posts matching title, description, category, or content
+    // Filter posts matching title, description, or category
     const filtered = posts
       .filter((post) => {
         return (
           post.title.toLowerCase().includes(query) ||
           post.category.toLowerCase().includes(query) ||
-          post.metaDescription.toLowerCase().includes(query) ||
-          post.content.toLowerCase().includes(query)
+          post.metaDescription.toLowerCase().includes(query)
         );
       })
       .slice(0, 8) // Limit to top 8 search results for speed and design neatness

@@ -5,6 +5,7 @@ export interface Author {
   avatar: string;
 }
 
+/** Full post including HTML content — only used on individual post pages. */
 export interface Post {
   id: string;
   title: string;
@@ -18,6 +19,14 @@ export interface Post {
   status: string;
   author: Author;
 }
+
+/**
+ * Post metadata without the HTML content body.
+ * Used everywhere except the individual post page (homepage, category pages,
+ * sidebar, search, RSS feed, sitemaps). Keeps the in-memory cache small so
+ * the server stays well under the 512 MB Render free-tier limit.
+ */
+export type PostMeta = Omit<Post, 'content'>;
 
 const SPREADSHEET_URL =
   process.env.SPREADSHEET_CSV_URL ||
@@ -102,37 +111,59 @@ export function getAuthorForCategory(category: string): Author {
   }
 }
 
-function normalizePost(raw: any): Post {
-  const id = String(raw.id || raw.ID || raw.Id || '');
-  const title = String(raw.title || raw.Title || raw.TITLE || '');
-  const slug = String(raw.slug || raw.Slug || raw.SLUG || '').trim().replace(/^\//, '');
-  const rawDate = String(raw.date || raw.Date || raw.DATE || '');
+/**
+ * Builds a PostMeta object (no content) from a raw CSV row dict.
+ * Used when populating the shared in-memory list cache.
+ */
+function normalizePostMeta(raw: Record<string, string>): PostMeta {
+  const id = raw.id || raw.ID || raw.Id || '';
+  const title = raw.title || raw.Title || raw.TITLE || '';
+  const slug = (raw.slug || raw.Slug || raw.SLUG || '').trim().replace(/^\//, '');
+  const rawDate = raw.date || raw.Date || raw.DATE || '';
   const date = parseDateString(rawDate);
-  const content = String(raw.content || raw.Content || raw.CONTENT || '');
-  const coverImage = String(raw.coverImage || raw.coverimage || raw.CoverImage || raw.COVERIMAGE || raw.image || raw.Image || '');
-  const imageAltText = String(raw.imageAltText || raw.imagealttext || raw.ImageAltText || raw.IMAGEALTTEXT || raw.alt || raw.Alt || '');
-  const metaDescription = String(raw.metaDescription || raw.metadescription || raw.MetaDescription || raw.METADESCRIPTION || raw.description || raw.Description || '');
-  const rawCategory = String(raw.category || raw.Category || raw.CATEGORY || 'News');
+  const coverImage = raw.coverImage || raw.coverimage || raw.CoverImage || raw.COVERIMAGE || raw.image || raw.Image || '';
+  const imageAltText = raw.imageAltText || raw.imagealttext || raw.ImageAltText || raw.IMAGEALTTEXT || raw.alt || raw.Alt || '';
+  const metaDescription = raw.metaDescription || raw.metadescription || raw.MetaDescription || raw.METADESCRIPTION || raw.description || raw.Description || '';
+  const rawCategory = raw.category || raw.Category || raw.CATEGORY || 'News';
   const category = normalizeCategory(rawCategory);
-  const status = String(raw.status || raw.Status || raw.STATUS || 'published');
+  const status = raw.status || raw.Status || raw.STATUS || 'published';
 
   return {
     id,
     title,
     slug,
     date,
-    content,
     coverImage: coverImage || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1200',
     imageAltText: imageAltText || title,
     metaDescription: metaDescription || title,
     category,
     status,
-    author: getAuthorForCategory(category)
+    author: getAuthorForCategory(category),
   };
 }
 
-function parseCSVToPosts(csvText: string): Post[] {
-  const posts: Post[] = [];
+/**
+ * Builds a full Post (with content) from a raw CSV row dict.
+ * Only used by getPostBySlug() when a specific post page is requested.
+ */
+function normalizePostFull(raw: Record<string, string>): Post {
+  const meta = normalizePostMeta(raw);
+  const content = raw.content || raw.Content || raw.CONTENT || '';
+  return { ...meta, content };
+}
+
+/** Legacy shim — kept for the local backup-posts.json path only. */
+function normalizePost(raw: any): Post {
+  return normalizePostFull(raw as Record<string, string>);
+}
+
+/**
+ * Single-pass state-machine CSV parser.
+ * Returns PostMeta[] — the content column is intentionally skipped to keep
+ * memory usage low (1301 posts × ~10 KB content each ≈ 13 MB saved per process).
+ */
+function parseCSVToPosts(csvText: string): PostMeta[] {
+  const posts: PostMeta[] = [];
   let headers: string[] = [];
   const currentRow: string[] = [];
   let inQuotes = false;
@@ -183,7 +214,7 @@ function parseCSVToPosts(csvText: string): Post[] {
           for (let idx = 0; idx < headers.length; idx++) {
             rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
           }
-          const post = normalizePost(rowDict);
+          const post = normalizePostMeta(rowDict);
           if (post.status.toLowerCase() === 'published' && post.slug && post.title) {
             posts.push(post);
           }
@@ -205,7 +236,7 @@ function parseCSVToPosts(csvText: string): Post[] {
       for (let idx = 0; idx < headers.length; idx++) {
         rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
       }
-      const post = normalizePost(rowDict);
+      const post = normalizePostMeta(rowDict);
       if (post.status.toLowerCase() === 'published' && post.slug && post.title) {
         posts.push(post);
       }
@@ -215,7 +246,97 @@ function parseCSVToPosts(csvText: string): Post[] {
   return posts;
 }
 
-let cachedPosts: Post[] | null = null;
+/**
+ * Scans the CSV for the first row whose slug matches `targetSlug` and returns
+ * a full Post (with content). Returns null if no matching row is found.
+ * Uses the same state-machine parser as parseCSVToPosts but short-circuits
+ * as soon as the target row is found.
+ */
+function parseCSVFindSlug(csvText: string, targetSlug: string): Post | null {
+  let headers: string[] = [];
+  const currentRow: string[] = [];
+  let inQuotes = false;
+  let valStart = 0;
+  let quoteEnd = 0;
+  let isQuoted = false;
+  let i = 0;
+  const n = csvText.length;
+  const lowerTarget = targetSlug.toLowerCase();
+
+  while (i < n) {
+    const c = csvText[i];
+    if (c === '"') {
+      if (!inQuotes) {
+        inQuotes = true;
+        isQuoted = true;
+        valStart = i + 1;
+      } else {
+        if (i + 1 < n && csvText[i + 1] === '"') {
+          i++;
+        } else {
+          inQuotes = false;
+          quoteEnd = i;
+        }
+      }
+    } else if (!inQuotes) {
+      if (c === ',') {
+        const val = isQuoted
+          ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+          : csvText.slice(valStart, i);
+        currentRow.push(val);
+        valStart = i + 1;
+        isQuoted = false;
+      } else if (c === '\n' || c === '\r') {
+        const val = isQuoted
+          ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+          : csvText.slice(valStart, i);
+        currentRow.push(val);
+        if (c === '\r' && i + 1 < n && csvText[i + 1] === '\n') {
+          i++;
+        }
+        valStart = i + 1;
+        isQuoted = false;
+
+        if (headers.length === 0) {
+          headers = currentRow.map(h => h.trim());
+        } else if (currentRow.some(x => x.trim() !== '')) {
+          const rowDict: Record<string, string> = {};
+          for (let idx = 0; idx < headers.length; idx++) {
+            rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
+          }
+          const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\//, '');
+          if (slugVal.toLowerCase() === lowerTarget) {
+            return normalizePostFull(rowDict);
+          }
+        }
+        currentRow.length = 0;
+      }
+    }
+    i++;
+  }
+
+  // Handle final row
+  if (currentRow.length > 0 && headers.length > 0) {
+    const val = isQuoted
+      ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+      : csvText.slice(valStart, n);
+    currentRow.push(val);
+    if (currentRow.some(x => x.trim() !== '')) {
+      const rowDict: Record<string, string> = {};
+      for (let idx = 0; idx < headers.length; idx++) {
+        rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
+      }
+      const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\//, '');
+      if (slugVal.toLowerCase() === lowerTarget) {
+        return normalizePostFull(rowDict);
+      }
+    }
+  }
+
+  return null;
+}
+
+let cachedPosts: PostMeta[] | null = null;
 let cacheExpiry = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -224,14 +345,20 @@ export function clearPostsCache() {
   cacheExpiry = 0;
 }
 
-export async function getPosts(): Promise<Post[]> {
+/**
+ * Returns all published PostMeta objects (no content field).
+ * Results are cached in-process for CACHE_TTL to avoid re-fetching on
+ * every request. The cache is intentionally content-free so that 1301 posts
+ * only occupy ~3–4 MB instead of ~18+ MB.
+ */
+export async function getPosts(): Promise<PostMeta[]> {
   const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
   const now = Date.now();
   if (cachedPosts && (isBuild || now < cacheExpiry)) {
     return cachedPosts;
   }
 
-  let posts: Post[] | null = null;
+  let posts: PostMeta[] | null = null;
 
   try {
     const res = await fetch(SPREADSHEET_URL, {
@@ -271,7 +398,7 @@ export async function getPosts(): Promise<Post[]> {
         const rawPosts = await res.json();
         if (Array.isArray(rawPosts)) {
           const parsed = rawPosts
-            .map(normalizePost)
+            .map((r: any) => normalizePostMeta(r as Record<string, string>))
             .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
           if (parsed.length > 0) {
             posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -285,7 +412,7 @@ export async function getPosts(): Promise<Post[]> {
 
   if (!posts) {
     posts = (localPosts as any[])
-      .map(normalizePost)
+      .map((r: any) => normalizePostMeta(r as Record<string, string>))
       .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
@@ -295,17 +422,65 @@ export async function getPosts(): Promise<Post[]> {
   return posts;
 }
 
+/**
+ * Fetches a single post's full content by re-requesting the CSV and scanning
+ * only for the matching slug row. This is only called when a user visits an
+ * individual post page, so the memory cost is temporary and scoped to that
+ * request (the full csvText is GC'd after the function returns).
+ */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const posts = await getPosts();
-  return posts.find(p => p.slug.toLowerCase() === slug.toLowerCase()) || null;
+  // 1. Try Google Sheets CSV (targeted scan)
+  try {
+    const res = await fetch(SPREADSHEET_URL, {
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/csv,text/plain,*/*'
+      }
+    });
+    if (res.ok) {
+      const csvText = await res.text();
+      if (!csvText.trim().startsWith('<!DOCTYPE') && !csvText.trim().startsWith('<html')) {
+        const post = parseCSVFindSlug(csvText, slug);
+        if (post && post.status.toLowerCase() === 'published') return post;
+      }
+    }
+  } catch (error) {
+    console.error(`[getPostBySlug] Google Sheets fetch failed for slug "${slug}":`, error);
+  }
+
+  // 2. Fall back to Dropbox JSON backup
+  const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
+  if (dropboxUrl) {
+    try {
+      const res = await fetch(dropboxUrl, { cache: 'no-store' });
+      if (res.ok) {
+        const rawPosts = await res.json();
+        if (Array.isArray(rawPosts)) {
+          const match = rawPosts
+            .map((r: any) => normalizePost(r))
+            .find(p => p.slug.toLowerCase() === slug.toLowerCase() && p.status.toLowerCase() === 'published');
+          if (match) return match;
+        }
+      }
+    } catch (error) {
+      console.error(`[getPostBySlug] Dropbox fetch failed for slug "${slug}":`, error);
+    }
+  }
+
+  // 3. Fall back to local JSON
+  const localMatch = (localPosts as any[])
+    .map((r: any) => normalizePost(r))
+    .find(p => p.slug.toLowerCase() === slug.toLowerCase() && p.status.toLowerCase() === 'published');
+  return localMatch || null;
 }
 
-export async function getPostsByCategory(category: string): Promise<Post[]> {
+export async function getPostsByCategory(category: string): Promise<PostMeta[]> {
   const posts = await getPosts();
   return posts.filter(p => p.category.toLowerCase() === category.toLowerCase());
 }
 
-export async function getPopularPosts(): Promise<Post[]> {
+export async function getPopularPosts(): Promise<PostMeta[]> {
   const posts = await getPosts();
   return posts.slice(0, 4);
 }
