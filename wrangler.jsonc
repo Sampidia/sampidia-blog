@@ -3,10 +3,24 @@
   "name": "sampidia-web",
   "main": ".open-next/worker.js",
   "compatibility_date": "2024-11-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://www.sampidia.com",
+    "SPREADSHEET_CSV_URL": "https://docs.google.com/spreadsheets/d/1SoZVQQMlgQr_LqOYRUjOMrbsVR-Xu8D-Q4phlP4TPj4/export?format=csv",
+    "DROPBOX_BACKUP_URL": "https://www.dropbox.com/scl/fi/qfvjo4yz662ts8g07a0sk/backup-posts.json?rlkey=b31kgrp0si0ggb8az22h5l073&st=7jckqgo2&dl=1",
+    "NEXT_PUBLIC_GA_MEASUREMENT_ID": "G-TJD1FB06JT",
+    "NEXT_PUBLIC_ADSENSE_CLIENT_ID": "ca-pub-1169009766287256",
+    "NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_TOP": "7652411262",
+    "NEXT_PUBLIC_ADSENSE_SLOT_HOMEPAGE_BOTTOM": "6642581928",
+    "NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_TOP": "7652411262",
+    "NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE_BOTTOM": "7813183049",
+    "NEXT_PUBLIC_ADSENSE_SLOT_POST_SIDEBAR": "5187019703",
+    "NEXT_PUBLIC_CUSDIS_APP_ID": "c3da25cf-9ca7-4de0-8e6d-74d1a0be5fe5"
   }
 }
-
