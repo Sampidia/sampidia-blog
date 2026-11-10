@@ -132,106 +132,80 @@ function normalizePost(raw: any): Post {
 }
 
 function parseCSVToPosts(csvText: string): Post[] {
-  const len = csvText.length;
+  const posts: Post[] = [];
+  let headers: string[] = [];
+  const currentRow: string[] = [];
+  let inQuotes = false;
+  let valStart = 0;
+  let quoteEnd = 0;
+  let isQuoted = false;
   let i = 0;
+  const n = csvText.length;
 
-  // 1. Parse header row
-  const headers: string[] = [];
-  while (i < len) {
-    let value = '';
-    if (csvText[i] === '"') {
-      i++; // skip opening quote
-      const start = i;
-      while (i < len) {
-        if (csvText[i] === '"') {
-          if (csvText[i + 1] === '"') {
-            i += 2;
-          } else {
-            break;
-          }
+  while (i < n) {
+    const c = csvText[i];
+    if (c === '"') {
+      if (!inQuotes) {
+        inQuotes = true;
+        isQuoted = true;
+        valStart = i + 1;
+      } else {
+        if (i + 1 < n && csvText[i + 1] === '"') {
+          i++; // skip escaped quote ""
         } else {
-          i++;
+          inQuotes = false;
+          quoteEnd = i;
         }
       }
-      value = csvText.slice(start, i).replace(/""/g, '"');
-      if (csvText[i] === '"') i++; // skip closing quote
-    } else {
-      const start = i;
-      while (i < len && csvText[i] !== ',' && csvText[i] !== '\r' && csvText[i] !== '\n') {
-        i++;
+    } else if (!inQuotes) {
+      if (c === ',') {
+        const val = isQuoted
+          ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+          : csvText.slice(valStart, i);
+        currentRow.push(val);
+        valStart = i + 1;
+        isQuoted = false;
+      } else if (c === '\n' || c === '\r') {
+        const val = isQuoted
+          ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+          : csvText.slice(valStart, i);
+        currentRow.push(val);
+        if (c === '\r' && i + 1 < n && csvText[i + 1] === '\n') {
+          i++;
+        }
+        valStart = i + 1;
+        isQuoted = false;
+
+        if (headers.length === 0) {
+          headers = currentRow.map(h => h.trim());
+        } else if (currentRow.some(x => x.trim() !== '')) {
+          const rowDict: Record<string, string> = {};
+          for (let idx = 0; idx < headers.length; idx++) {
+            rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
+          }
+          const post = normalizePost(rowDict);
+          if (post.status.toLowerCase() === 'published' && post.slug && post.title) {
+            posts.push(post);
+          }
+        }
+        currentRow.length = 0;
       }
-      value = csvText.slice(start, i);
     }
-
-    headers.push(value.trim());
-
-    if (i < len && csvText[i] === ',') {
-      i++;
-    } else if (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
-      if (csvText[i] === '\r' && csvText[i + 1] === '\n') i++;
-      i++;
-      break;
-    }
+    i++;
   }
 
-  // 2. Parse data rows directly into Post objects (streaming without intermediate 2D arrays)
-  const posts: Post[] = [];
-  const headerCount = headers.length;
-
-  while (i < len) {
-    const row: Record<string, string> = {};
-    let colIndex = 0;
-    let hasContent = false;
-
-    while (i < len && colIndex < headerCount) {
-      let value = '';
-      if (csvText[i] === '"') {
-        i++; // skip opening quote
-        const start = i;
-        while (i < len) {
-          if (csvText[i] === '"') {
-            if (csvText[i + 1] === '"') {
-              i += 2;
-            } else {
-              break;
-            }
-          } else {
-            i++;
-          }
-        }
-        value = csvText.slice(start, i).replace(/""/g, '"');
-        if (csvText[i] === '"') i++; // skip closing quote
-      } else {
-        const start = i;
-        while (i < len && csvText[i] !== ',' && csvText[i] !== '\r' && csvText[i] !== '\n') {
-          i++;
-        }
-        value = csvText.slice(start, i);
+  // Handle final row if CSV does not end with a trailing newline
+  if (currentRow.length > 0 && headers.length > 0) {
+    const val = isQuoted
+      ? csvText.slice(valStart, quoteEnd).replace(/""/g, '"')
+      : csvText.slice(valStart, n);
+    currentRow.push(val);
+    if (currentRow.some(x => x.trim() !== '')) {
+      const rowDict: Record<string, string> = {};
+      for (let idx = 0; idx < headers.length; idx++) {
+        rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
       }
-
-      if (value.trim() !== '') hasContent = true;
-      const header = headers[colIndex];
-      if (header) {
-        row[header] = value;
-      }
-      colIndex++;
-
-      if (i < len && csvText[i] === ',') {
-        i++;
-      } else if (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
-        if (csvText[i] === '\r' && csvText[i + 1] === '\n') i++;
-        i++;
-        break;
-      }
-    }
-
-    // Skip any extra trailing newlines
-    while (i < len && (csvText[i] === '\r' || csvText[i] === '\n')) {
-      i++;
-    }
-
-    if (hasContent) {
-      const post = normalizePost(row);
+      const post = normalizePost(rowDict);
       if (post.status.toLowerCase() === 'published' && post.slug && post.title) {
         posts.push(post);
       }
