@@ -101,6 +101,38 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        {/* Aggressively remove Netlify injected badge / drawer */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var removeBadge = function() {
+                  var selectors = [
+                    '.nl-badge',
+                    '.nl--card',
+                    '[class*="nl-badge"]',
+                    '[class*="nl--card"]',
+                    '[id*="netlify-badge"]',
+                    'netlify-drawer',
+                    '#netlify-drawer'
+                  ];
+                  try {
+                    document.querySelectorAll(selectors.join(',')).forEach(function(el) {
+                      el.remove();
+                    });
+                  } catch (e) {}
+                };
+                if (typeof window !== 'undefined') {
+                  removeBadge();
+                  if (window.MutationObserver) {
+                    var observer = new MutationObserver(removeBadge);
+                    observer.observe(document.documentElement, { childList: true, subtree: true });
+                  }
+                }
+              })();
+            `,
+          }}
+        />
       </body>
     </html>
   );
