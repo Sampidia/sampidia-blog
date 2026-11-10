@@ -32,7 +32,9 @@ export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const posts = await getPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  // Pre-render the top 50 most recent articles at build time.
+  // All older posts render on-demand instantly thanks to dynamicParams = true.
+  return posts.slice(0, 50).map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
