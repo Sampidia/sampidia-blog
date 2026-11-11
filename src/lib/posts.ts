@@ -340,10 +340,14 @@ let cachedPosts: PostMeta[] | null = null;
 let cacheExpiry = 0;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes (instrumentation refreshes every 4 min)
 
-/** Per-slug cache for full post content. Avoids re-fetching the 14 MB CSV
- *  on every individual post page visit. Keyed by lowercase slug. */
-const slugContentCache = new Map<string, { post: Post; expiry: number }>();
-const SLUG_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+/**
+ * The raw CSV text is kept in memory alongside the PostMeta list.
+ * This lets getPostBySlug() scan for content WITHOUT any network request —
+ * it just calls parseCSVFindSlug() on the already-loaded string.
+ * Memory cost: ~14 MB, well within the 512 MB Render free-tier limit.
+ */
+let cachedCSVText: string | null = null;
+let inFlightFetch: Promise<PostMeta[]> | null = null;
 
 /** Wraps fetch with a hard timeout so a stalled Google Sheets connection
  *  fails fast instead of hanging a user request for 60+ seconds. */
@@ -368,14 +372,16 @@ const SHEETS_FETCH_OPTIONS: RequestInit = {
 export function clearPostsCache() {
   cachedPosts = null;
   cacheExpiry = 0;
-  slugContentCache.clear();
+  cachedCSVText = null;
+  inFlightFetch = null;
 }
 
 /**
  * Returns all published PostMeta objects (no content field).
- * Results are cached in-process for CACHE_TTL to avoid re-fetching on
- * every request. The cache is intentionally content-free so that 1301 posts
- * only occupy ~3–4 MB instead of ~18+ MB.
+ * Also stores the raw CSV text in cachedCSVText so getPostBySlug()
+ * can find post content without any additional network requests.
+ * Uses inFlightFetch deduplication so concurrent requests never trigger
+ * duplicate simultaneous 14MB downloads from Google Sheets.
  */
 export async function getPosts(): Promise<PostMeta[]> {
   const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
@@ -384,107 +390,110 @@ export async function getPosts(): Promise<PostMeta[]> {
     return cachedPosts;
   }
 
-  let posts: PostMeta[] | null = null;
-
-  try {
-    const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS);
-
-    console.log(`[Google Sheets] Response Status: ${res.status}, Type: ${res.headers.get('content-type')}`);
-
-    if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
-    const csvText = await res.text();
-
-    console.log(`[Google Sheets] Received ${csvText.length} characters. Start: ${csvText.substring(0, 80).replace(/\n/g, ' ')}`);
-
-    if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
-      throw new Error(`Google returned an HTML page instead of CSV: ${csvText.substring(0, 150)}`);
-    }
-
-    const parsed = parseCSVToPosts(csvText);
-    console.log(`[Google Sheets] Successfully parsed ${parsed.length} published posts.`);
-    if (parsed.length > 0) {
-      posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }
-  } catch (error) {
-    console.error('Failed to fetch from Google Sheets, trying Dropbox...', error);
+  if (inFlightFetch) {
+    return inFlightFetch;
   }
 
-  if (!posts) {
-    const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
-    if (dropboxUrl) {
-      try {
-        const res = await fetch(dropboxUrl, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Dropbox fetch failed');
-        const rawPosts = await res.json();
-        if (Array.isArray(rawPosts)) {
-          const parsed = rawPosts
-            .map((r: any) => normalizePostMeta(r as Record<string, string>))
-            .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
-          if (parsed.length > 0) {
-            posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  inFlightFetch = (async () => {
+    let posts: PostMeta[] | null = null;
+
+    try {
+      const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS);
+
+      console.log(`[Google Sheets] Response Status: ${res.status}, Type: ${res.headers.get('content-type')}`);
+
+      if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
+      const csvText = await res.text();
+
+      console.log(`[Google Sheets] Received ${csvText.length} characters. Start: ${csvText.substring(0, 80).replace(/\n/g, ' ')}`);
+
+      if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+        throw new Error(`Google returned an HTML page instead of CSV: ${csvText.substring(0, 150)}`);
+      }
+
+      const parsed = parseCSVToPosts(csvText);
+      console.log(`[Google Sheets] Successfully parsed ${parsed.length} published posts.`);
+      if (parsed.length > 0) {
+        posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        // Keep the CSV text so getPostBySlug() can extract content without re-fetching
+        cachedCSVText = csvText;
+      }
+    } catch (error) {
+      console.error('Failed to fetch from Google Sheets, trying Dropbox...', error);
+    }
+
+    if (!posts) {
+      const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
+      if (dropboxUrl) {
+        try {
+          const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 15_000);
+          if (res.ok) {
+            const rawPosts = await res.json();
+            if (Array.isArray(rawPosts)) {
+              const parsed = rawPosts
+                .map((r: any) => normalizePostMeta(r as Record<string, string>))
+                .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title);
+              if (parsed.length > 0) {
+                posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              }
+            }
           }
+        } catch (error) {
+          console.error('Failed to fetch from Dropbox, trying local JSON...', error);
         }
-      } catch (error) {
-        console.error('Failed to fetch from Dropbox, trying local JSON...', error);
       }
     }
-  }
 
-  if (!posts) {
-    posts = (localPosts as any[])
-      .map((r: any) => normalizePostMeta(r as Record<string, string>))
-      .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
+    if (!posts) {
+      posts = (localPosts as any[])
+        .map((r: any) => normalizePostMeta(r as Record<string, string>))
+        .filter(post => post.status.toLowerCase() === 'published' && post.slug && post.title)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
 
-  cachedPosts = posts;
-  cacheExpiry = Date.now() + CACHE_TTL;
-  return posts;
+    cachedPosts = posts;
+    cacheExpiry = Date.now() + CACHE_TTL;
+    return posts;
+  })();
+
+  try {
+    return await inFlightFetch;
+  } finally {
+    inFlightFetch = null;
+  }
 }
 
 /**
  * Returns a single full Post (with content) for the given slug.
  *
  * Strategy:
- *  1. Check the per-slug in-memory cache (30-min TTL) — instant if hit.
- *  2. Fetch the CSV with a 25-second timeout and scan for the slug row.
- *  3. Fall back to Dropbox JSON backup.
- *  4. Fall back to local backup-posts.json.
- *
- * The slug cache means repeated visits to the same post page never re-fetch
- * the 14 MB CSV, and timeouts fail fast instead of hanging the user.
+ *  1. Uses the in-memory cached CSV text (cachedCSVText) populated by getPosts().
+ *     This avoids making ANY network request when a user visits a post!
+ *  2. If cachedCSVText is not yet populated, awaits getPosts() once.
+ *  3. Scans the in-memory CSV text with parseCSVFindSlug() (~10ms).
+ *  4. Only if not found in CSV, falls back to Dropbox / local JSON backup.
  */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const lowerSlug = slug.toLowerCase();
 
-  // 1. Check per-slug content cache
-  const cached = slugContentCache.get(lowerSlug);
-  if (cached && Date.now() < cached.expiry) {
-    return cached.post;
+  // 1. Ensure posts and cachedCSVText are loaded in memory
+  if (!cachedCSVText) {
+    await getPosts();
   }
 
-  // 2. Try Google Sheets CSV with timeout
-  try {
-    const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS, 25_000);
-    if (res.ok) {
-      const csvText = await res.text();
-      if (!csvText.trim().startsWith('<!DOCTYPE') && !csvText.trim().startsWith('<html')) {
-        const post = parseCSVFindSlug(csvText, slug);
-        if (post && post.status.toLowerCase() === 'published') {
-          slugContentCache.set(lowerSlug, { post, expiry: Date.now() + SLUG_CACHE_TTL });
-          return post;
-        }
-      }
+  // 2. Scan the in-memory CSV text directly — 0 network requests!
+  if (cachedCSVText) {
+    const post = parseCSVFindSlug(cachedCSVText, slug);
+    if (post && post.status.toLowerCase() === 'published') {
+      return post;
     }
-  } catch (error) {
-    console.error(`[getPostBySlug] Google Sheets fetch failed for slug "${slug}":`, error);
   }
 
   // 3. Fall back to Dropbox JSON backup
   const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
   if (dropboxUrl) {
     try {
-      const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 15_000);
+      const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 10_000);
       if (res.ok) {
         const rawPosts = await res.json();
         if (Array.isArray(rawPosts)) {
@@ -492,13 +501,12 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
             .map((r: any) => normalizePost(r))
             .find(p => p.slug.toLowerCase() === lowerSlug && p.status.toLowerCase() === 'published');
           if (match) {
-            slugContentCache.set(lowerSlug, { post: match, expiry: Date.now() + SLUG_CACHE_TTL });
             return match;
           }
         }
       }
     } catch (error) {
-      console.error(`[getPostBySlug] Dropbox fetch failed for slug "${slug}":`, error);
+      console.error(`[getPostBySlug] Dropbox backup failed for slug "${slug}":`, error);
     }
   }
 
