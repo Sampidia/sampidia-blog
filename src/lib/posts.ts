@@ -338,7 +338,7 @@ function parseCSVFindSlug(csvText: string, targetSlug: string): Post | null {
 
 let cachedPosts: PostMeta[] | null = null;
 let cacheExpiry = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes (instrumentation refreshes every 4 min)
 
 export function clearPostsCache() {
   cachedPosts = null;
