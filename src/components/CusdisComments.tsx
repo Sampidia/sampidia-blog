@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface CusdisCommentsProps {
   post: {
@@ -11,61 +11,64 @@ interface CusdisCommentsProps {
 }
 
 export default function CusdisComments({ post }: CusdisCommentsProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [iframeHeight, setIframeHeight] = useState(450);
   const host = (process.env.NEXT_PUBLIC_CUSDIS_HOST || 'https://cusdis-xyxt.onrender.com').replace(/\/$/, '');
   const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'eb16b38e-d745-484d-9236-05e952c99b25';
   const pageId = post.id && String(post.id).trim() !== '' ? String(post.id) : post.slug;
   const pageUrl = `https://www.sampidia.com/${post.slug}`;
 
+  // Listen for auto-resize messages sent by Cusdis inside the iframe
   useEffect(() => {
-    // 1. Listen for iframe resize events from Cusdis
-    const handleMessage = (event: MessageEvent) => {
+    const onMessage = (event: MessageEvent) => {
       try {
-        if (!event.origin.startsWith(host)) return;
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data && data.event === 'resize' && data.offsetHeight) {
-          const iframe = containerRef.current?.querySelector('iframe');
-          if (iframe) {
-            iframe.style.height = `${Math.max(350, Number(data.offsetHeight) + 50)}px`;
+        const msg = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (msg && msg.from === 'cusdis' && msg.event === 'resize') {
+          const height = Number(msg.data);
+          if (!isNaN(height) && height > 0) {
+            setIframeHeight(Math.max(350, height + 40));
           }
         }
       } catch {
-        // ignore non-json messages
+        // ignore non-Cusdis messages
       }
     };
 
-    window.addEventListener('message', handleMessage);
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
 
-    // 2. Load or re-initialize Cusdis script
-    const loadCusdis = () => {
-      // @ts-ignore
-      if (window.CUSDIS) {
-        // @ts-ignore
-        window.CUSDIS.initial();
-      } else {
-        const existingScript = document.getElementById('cusdis-script');
-        if (existingScript) {
-          existingScript.remove(); // remove stale script tag to force fresh load
-        }
-        const script = document.createElement('script');
-        script.id = 'cusdis-script';
-        script.src = `${host}/js/cusdis.es.js`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => {
-          // @ts-ignore
-          if (window.CUSDIS) window.CUSDIS.initial();
-        };
-        document.body.appendChild(script);
-      }
+  const srcDoc = useMemo(() => {
+    const dataObj = {
+      host,
+      appId,
+      pageId,
+      pageTitle: post.title,
+      pageUrl,
+      theme: 'auto',
     };
 
-    loadCusdis();
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [post.slug, pageId, post.title, host, appId]);
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="${host}/js/style.css">
+    <base target="_parent" />
+    <script>
+      window.CUSDIS_LOCALE = undefined;
+      window.__DATA__ = ${JSON.stringify(dataObj)};
+    <\/script>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; padding: 0; background: transparent; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="${host}/js/iframe.umd.js" type="module"><\/script>
+  </body>
+</html>`;
+  }, [host, appId, pageId, post.title, pageUrl]);
 
   return (
     <div className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
@@ -73,15 +76,17 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
         Discussion
       </h3>
 
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[300px]">
-        <div
-          ref={containerRef}
-          id="cusdis_thread"
-          data-host={host}
-          data-app-id={appId}
-          data-page-id={pageId}
-          data-page-title={post.title}
-          data-page-url={pageUrl}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[350px]">
+        <iframe
+          key={`${post.slug}-${pageId}`}
+          title="Comments"
+          srcDoc={srcDoc}
+          style={{
+            width: '100%',
+            height: `${iframeHeight}px`,
+            border: 'none',
+            overflow: 'hidden',
+          }}
         />
       </div>
     </div>
