@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface CusdisCommentsProps {
   post: {
@@ -12,101 +12,60 @@ interface CusdisCommentsProps {
 
 export default function CusdisComments({ post }: CusdisCommentsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isIntersected, setIsIntersected] = useState(false);
   const host = (process.env.NEXT_PUBLIC_CUSDIS_HOST || 'https://cusdis-xyxt.onrender.com').replace(/\/$/, '');
   const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'eb16b38e-d745-484d-9236-05e952c99b25';
-
-  // Setup Intersection Observer to detect when the comment thread container approaches the viewport
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || isIntersected) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting) {
-          setIsIntersected(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: '200px', // pre-load comments when 200px above/below viewport
-      }
-    );
-
-    observer.observe(container);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isIntersected]);
+  const pageId = post.id && String(post.id).trim() !== '' ? String(post.id) : post.slug;
+  const pageUrl = `https://www.sampidia.com/${post.slug}`;
 
   useEffect(() => {
-    if (!isIntersected) return;
-
-    const pageUrl = `${window.location.origin}/${post.slug}`;
-
-    if (!containerRef.current) return;
-
-    // Set data attributes on the widget container
-    const el = containerRef.current;
-    el.setAttribute('data-host', host);
-    el.setAttribute('data-app-id', appId);
-    el.setAttribute('data-page-id', post.id);
-    el.setAttribute('data-page-title', post.title);
-    el.setAttribute('data-page-url', pageUrl);
-
-    // Resize handler: Cusdis sends postMessage events with resize info
+    // 1. Listen for iframe resize events from Cusdis
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== host) return;
-      const iframe = el.querySelector('iframe');
-      if (!iframe) return;
-
-      // Cusdis sends { event: 'resize', offsetHeight: number }
-      if (event.data && event.data.event === 'resize' && event.data.offsetHeight) {
-        const newHeight = Math.max(550, Number(event.data.offsetHeight) + 80);
-        iframe.style.height = `${newHeight}px`;
+      try {
+        if (!event.origin.startsWith(host)) return;
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && data.event === 'resize' && data.offsetHeight) {
+          const iframe = containerRef.current?.querySelector('iframe');
+          if (iframe) {
+            iframe.style.height = `${Math.max(350, Number(data.offsetHeight) + 50)}px`;
+          }
+        }
+      } catch {
+        // ignore non-json messages
       }
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Polling fallback: set a minimum height and grow as iframe content loads
-    let pollAttempts = 0;
-    const pollInterval = setInterval(() => {
-      const iframe = el.querySelector('iframe');
-      if (iframe) {
-        // Ensure iframe never collapses
-        if (!iframe.style.height || parseInt(iframe.style.height) < 550) {
-          iframe.style.height = '550px';
-        }
-        iframe.style.width = '100%';
-        iframe.style.border = 'none';
-        iframe.scrolling = 'no';
-      }
-      pollAttempts++;
-      if (pollAttempts > 20) clearInterval(pollInterval);
-    }, 500);
-
-    // Load (or reload) the Cusdis embed script
-    const existingScript = document.getElementById('cusdis-script');
-    if (existingScript) {
+    // 2. Load or re-initialize Cusdis script
+    const loadCusdis = () => {
       // @ts-ignore
-      if (window.CUSDIS) window.CUSDIS.initial();
-    } else {
-      const script = document.createElement('script');
-      script.id = 'cusdis-script';
-      script.src = `${host}/js/cusdis.es.js`;
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
+      if (window.CUSDIS) {
+        // @ts-ignore
+        window.CUSDIS.initial();
+      } else {
+        const existingScript = document.getElementById('cusdis-script');
+        if (existingScript) {
+          existingScript.remove(); // remove stale script tag to force fresh load
+        }
+        const script = document.createElement('script');
+        script.id = 'cusdis-script';
+        script.src = `${host}/js/cusdis.es.js`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          // @ts-ignore
+          if (window.CUSDIS) window.CUSDIS.initial();
+        };
+        document.body.appendChild(script);
+      }
+    };
+
+    loadCusdis();
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      clearInterval(pollInterval);
     };
-  }, [post.id, post.title, post.slug, appId, host, isIntersected]);
+  }, [post.slug, pageId, post.title, host, appId]);
 
   return (
     <div className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
@@ -114,8 +73,16 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
         Discussion
       </h3>
 
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[250px]">
-        <div ref={containerRef} id="cusdis_thread" />
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[300px]">
+        <div
+          ref={containerRef}
+          id="cusdis_thread"
+          data-host={host}
+          data-app-id={appId}
+          data-page-id={pageId}
+          data-page-title={post.title}
+          data-page-url={pageUrl}
+        />
       </div>
     </div>
   );
