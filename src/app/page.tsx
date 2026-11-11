@@ -127,7 +127,7 @@ export default async function Home() {
           {CATEGORIES.map((cat) => {
             const categoryPosts = allPosts
               .filter((p) => p.category.toLowerCase() === cat.toLowerCase())
-              .slice(0, 4);
+              .slice(0, 5);
             if (categoryPosts.length === 0) return null;
 
             return (
