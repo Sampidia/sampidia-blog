@@ -10,7 +10,7 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { getPosts, clearPostsCache } = await import('./lib/posts');
+    const { getPosts, refreshPosts } = await import('./lib/posts');
 
     // --- Initial warm-up ---
     console.log('[Instrumentation] Pre-warming posts cache on startup...');
@@ -21,16 +21,13 @@ export async function register() {
       console.error('[Instrumentation] Initial cache warm-up failed:', err);
     }
 
-    // --- Background refresh every 4 minutes ---
-    // The in-memory cache TTL is 5 minutes. By refreshing every 4 minutes we
-    // ensure the cache is always valid and no incoming request ever has to wait
-    // for a fresh fetch.
-    const REFRESH_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes
+    // --- Background refresh every 5 minutes ---
+    // Safely re-fetches without clearing existing cache beforehand
+    const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
     const refresh = async () => {
       try {
-        clearPostsCache();
-        const posts = await getPosts();
+        const posts = await refreshPosts();
         console.log(`[Instrumentation] Background refresh complete: ${posts.length} posts.`);
       } catch (err) {
         console.error('[Instrumentation] Background refresh failed:', err);

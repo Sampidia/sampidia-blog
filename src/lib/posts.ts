@@ -377,6 +377,32 @@ export function clearPostsCache() {
 }
 
 /**
+ * Safely refreshes the posts cache in the background without clearing
+ * existing cached data beforehand. If the fetch fails, existing data remains intact.
+ */
+export async function refreshPosts(): Promise<PostMeta[]> {
+  try {
+    const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS, 25_000);
+    if (!res.ok) throw new Error(`Spreadsheet fetch failed: ${res.status}`);
+    const csvText = await res.text();
+    if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+      throw new Error(`Google returned an HTML page instead of CSV`);
+    }
+    const parsed = parseCSVToPosts(csvText);
+    if (parsed.length > 0) {
+      const posts = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      cachedPosts = posts;
+      cachedCSVText = csvText;
+      cacheExpiry = Date.now() + CACHE_TTL;
+      return posts;
+    }
+  } catch (err) {
+    console.error('[refreshPosts] Background refresh failed, keeping existing cache:', err);
+  }
+  return cachedPosts || [];
+}
+
+/**
  * Returns all published PostMeta objects (no content field).
  * Also stores the raw CSV text in cachedCSVText so getPostBySlug()
  * can find post content without any additional network requests.
