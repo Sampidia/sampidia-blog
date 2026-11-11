@@ -13,7 +13,8 @@ interface CusdisCommentsProps {
 export default function CusdisComments({ post }: CusdisCommentsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isIntersected, setIsIntersected] = useState(false);
-  const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'c3da25cf-9ca7-4de0-8e6d-74d1a0be5fe5';
+  const host = (process.env.NEXT_PUBLIC_CUSDIS_HOST || 'https://cusdis-xyxt.onrender.com').replace(/\/$/, '');
+  const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'eb16b38e-d745-484d-9236-05e952c99b25';
 
   // Setup Intersection Observer to detect when the comment thread container approaches the viewport
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
 
     // Set data attributes on the widget container
     const el = containerRef.current;
-    el.setAttribute('data-host', 'https://cusdis.com');
+    el.setAttribute('data-host', host);
     el.setAttribute('data-app-id', appId);
     el.setAttribute('data-page-id', post.id);
     el.setAttribute('data-page-title', post.title);
@@ -57,7 +58,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
 
     // Resize handler: Cusdis sends postMessage events with resize info
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://cusdis.com') return;
+      if (event.origin !== host) return;
       const iframe = el.querySelector('iframe');
       if (!iframe) return;
 
@@ -95,7 +96,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
     } else {
       const script = document.createElement('script');
       script.id = 'cusdis-script';
-      script.src = 'https://cusdis.com/js/cusdis.es.js';
+      script.src = `${host}/js/cusdis.es.js`;
       script.async = true;
       script.defer = true;
       document.body.appendChild(script);
@@ -105,7 +106,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
       window.removeEventListener('message', handleMessage);
       clearInterval(pollInterval);
     };
-  }, [post.id, post.title, post.slug, appId, isIntersected]);
+  }, [post.id, post.title, post.slug, appId, host, isIntersected]);
 
   return (
     <div className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
