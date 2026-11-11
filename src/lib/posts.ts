@@ -340,9 +340,35 @@ let cachedPosts: PostMeta[] | null = null;
 let cacheExpiry = 0;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes (instrumentation refreshes every 4 min)
 
+/** Per-slug cache for full post content. Avoids re-fetching the 14 MB CSV
+ *  on every individual post page visit. Keyed by lowercase slug. */
+const slugContentCache = new Map<string, { post: Post; expiry: number }>();
+const SLUG_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+/** Wraps fetch with a hard timeout so a stalled Google Sheets connection
+ *  fails fast instead of hanging a user request for 60+ seconds. */
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 25_000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const SHEETS_FETCH_OPTIONS: RequestInit = {
+  cache: 'no-store',
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'text/csv,text/plain,*/*',
+  },
+};
+
 export function clearPostsCache() {
   cachedPosts = null;
   cacheExpiry = 0;
+  slugContentCache.clear();
 }
 
 /**
@@ -361,13 +387,7 @@ export async function getPosts(): Promise<PostMeta[]> {
   let posts: PostMeta[] | null = null;
 
   try {
-    const res = await fetch(SPREADSHEET_URL, {
-      cache: 'no-store',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/csv,text/plain,*/*'
-      }
-    });
+    const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS);
 
     console.log(`[Google Sheets] Response Status: ${res.status}, Type: ${res.headers.get('content-type')}`);
 
@@ -423,44 +443,58 @@ export async function getPosts(): Promise<PostMeta[]> {
 }
 
 /**
- * Fetches a single post's full content by re-requesting the CSV and scanning
- * only for the matching slug row. This is only called when a user visits an
- * individual post page, so the memory cost is temporary and scoped to that
- * request (the full csvText is GC'd after the function returns).
+ * Returns a single full Post (with content) for the given slug.
+ *
+ * Strategy:
+ *  1. Check the per-slug in-memory cache (30-min TTL) — instant if hit.
+ *  2. Fetch the CSV with a 25-second timeout and scan for the slug row.
+ *  3. Fall back to Dropbox JSON backup.
+ *  4. Fall back to local backup-posts.json.
+ *
+ * The slug cache means repeated visits to the same post page never re-fetch
+ * the 14 MB CSV, and timeouts fail fast instead of hanging the user.
  */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  // 1. Try Google Sheets CSV (targeted scan)
+  const lowerSlug = slug.toLowerCase();
+
+  // 1. Check per-slug content cache
+  const cached = slugContentCache.get(lowerSlug);
+  if (cached && Date.now() < cached.expiry) {
+    return cached.post;
+  }
+
+  // 2. Try Google Sheets CSV with timeout
   try {
-    const res = await fetch(SPREADSHEET_URL, {
-      cache: 'no-store',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/csv,text/plain,*/*'
-      }
-    });
+    const res = await fetchWithTimeout(SPREADSHEET_URL, SHEETS_FETCH_OPTIONS, 25_000);
     if (res.ok) {
       const csvText = await res.text();
       if (!csvText.trim().startsWith('<!DOCTYPE') && !csvText.trim().startsWith('<html')) {
         const post = parseCSVFindSlug(csvText, slug);
-        if (post && post.status.toLowerCase() === 'published') return post;
+        if (post && post.status.toLowerCase() === 'published') {
+          slugContentCache.set(lowerSlug, { post, expiry: Date.now() + SLUG_CACHE_TTL });
+          return post;
+        }
       }
     }
   } catch (error) {
     console.error(`[getPostBySlug] Google Sheets fetch failed for slug "${slug}":`, error);
   }
 
-  // 2. Fall back to Dropbox JSON backup
+  // 3. Fall back to Dropbox JSON backup
   const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
   if (dropboxUrl) {
     try {
-      const res = await fetch(dropboxUrl, { cache: 'no-store' });
+      const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 15_000);
       if (res.ok) {
         const rawPosts = await res.json();
         if (Array.isArray(rawPosts)) {
           const match = rawPosts
             .map((r: any) => normalizePost(r))
-            .find(p => p.slug.toLowerCase() === slug.toLowerCase() && p.status.toLowerCase() === 'published');
-          if (match) return match;
+            .find(p => p.slug.toLowerCase() === lowerSlug && p.status.toLowerCase() === 'published');
+          if (match) {
+            slugContentCache.set(lowerSlug, { post: match, expiry: Date.now() + SLUG_CACHE_TTL });
+            return match;
+          }
         }
       }
     } catch (error) {
@@ -468,10 +502,10 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     }
   }
 
-  // 3. Fall back to local JSON
+  // 4. Fall back to local JSON
   const localMatch = (localPosts as any[])
     .map((r: any) => normalizePost(r))
-    .find(p => p.slug.toLowerCase() === slug.toLowerCase() && p.status.toLowerCase() === 'published');
+    .find(p => p.slug.toLowerCase() === lowerSlug && p.status.toLowerCase() === 'published');
   return localMatch || null;
 }
 
