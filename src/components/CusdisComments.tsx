@@ -65,7 +65,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
   </head>
   <body>
     <div id="root"></div>
-    <script src="${host}/js/iframe.umd.js" type="module"><\/script>
+    <script defer src="${host}/js/iframe.umd.js"><\/script>
   </body>
 </html>`;
   }, [host, appId, pageId, post.title, pageUrl]);
