@@ -29,6 +29,8 @@ function safeFormatDate(dateStr: string, options: Intl.DateTimeFormatOptions): s
 // Allow any slug not pre-generated at build time to render on demand.
 // This is the default in Next.js but we set it explicitly to be safe.
 export const dynamicParams = true;
+// Always server-render post pages so content comes from live Google Sheets data.
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const posts = await getPosts();

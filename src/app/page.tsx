@@ -5,6 +5,9 @@ import Sidebar from '@/components/Sidebar';
 import AdUnit from '@/components/AdUnit';
 import { Metadata } from 'next';
 
+// Always server-render: posts come from Google Sheets live, not a static build snapshot.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'SamPidia - Breaking News, Tech, Sports & Lifestyle',
   description:
