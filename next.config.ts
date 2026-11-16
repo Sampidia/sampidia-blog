@@ -3,18 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // Redirect www.sampidia.com to sampidia.com
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.sampidia.com',
-          },
-        ],
-        destination: 'https://sampidia.com/:path*',
-        permanent: true,
-      },
       // Redirect old WordPress /tag/* and /tags/* paths to homepage
       {
         source: '/tag/:path*',
