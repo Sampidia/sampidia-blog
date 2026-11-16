@@ -5,6 +5,7 @@ import AdUnit from '@/components/AdUnit';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'Learn how SamPidia collects, protects, and handles your personal data, comments, cookies, and Google advertising tracking.',
+  alternates: { canonical: '/privacy-policy' },
 };
 
 export default async function Page() {

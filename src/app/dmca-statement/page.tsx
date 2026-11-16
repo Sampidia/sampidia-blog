@@ -5,6 +5,7 @@ import AdUnit from '@/components/AdUnit';
 export const metadata: Metadata = {
   title: 'DMCA Statement',
   description: 'SamPidia respects intellectual property rights. Read our Digital Millennium Copyright Act (DMCA) policy and submission guidelines.',
+  alternates: { canonical: '/dmca-statement' },
 };
 
 export default async function Page() {

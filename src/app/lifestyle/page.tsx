@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Lifestyle',
   description: 'Read tips, guides, and stories about student and graduate lifestyle on SamPidia.',
+  alternates: { canonical: '/lifestyle' },
 };
 
 export default function Page() {

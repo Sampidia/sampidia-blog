@@ -5,6 +5,7 @@ import AdUnit from '@/components/AdUnit';
 export const metadata: Metadata = {
   title: 'Disclaimer',
   description: 'Understand the terms of service, liability disclaimer, external links disclaimer, and guest contributors disclaimer on SamPidia.',
+  alternates: { canonical: '/disclaimer' },
 };
 
 export default async function Page() {

@@ -5,6 +5,7 @@ import AdUnit from '@/components/AdUnit';
 export const metadata: Metadata = {
   title: 'About Us',
   description: 'Learn about SamPidia – your premier hub for breaking news, tech trends, sports coverage, and lifestyle content from Nigeria and Africa.',
+  alternates: { canonical: '/about-sampidia' },
 };
 
 export default async function Page() {

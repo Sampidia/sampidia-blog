@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Sports',
   description: 'Stay updated with school sports activities, athletic events, and youth sports coverage on SamPidia.',
+  alternates: { canonical: '/sports' },
 };
 
 export default function Page() {

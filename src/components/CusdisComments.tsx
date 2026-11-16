@@ -16,7 +16,7 @@ export default function CusdisComments({ post }: CusdisCommentsProps) {
   const host = (process.env.NEXT_PUBLIC_CUSDIS_HOST || 'https://cusdis-xyxt.onrender.com').replace(/\/$/, '');
   const appId = process.env.NEXT_PUBLIC_CUSDIS_APP_ID || 'eb16b38e-d745-484d-9236-05e952c99b25';
   const pageId = post.id && String(post.id).trim() !== '' ? String(post.id) : post.slug;
-  const pageUrl = `https://www.sampidia.com/${post.slug}`;
+  const pageUrl = `https://sampidia.com/${post.slug}`;
 
   // Sync theme with SamPidia's website theme toggle (detects .dark on <html>)
   useEffect(() => {

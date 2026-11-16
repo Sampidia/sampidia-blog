@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Tech',
   description: 'Explore tech trends, online education tools, and digital platforms on SamPidia.',
+  alternates: { canonical: '/tech' },
 };
 
 export default function Page() {

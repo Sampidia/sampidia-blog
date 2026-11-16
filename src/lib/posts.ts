@@ -118,7 +118,7 @@ export function getAuthorForCategory(category: string): Author {
 function normalizePostMeta(raw: Record<string, string>): PostMeta {
   const id = raw.id || raw.ID || raw.Id || '';
   const title = raw.title || raw.Title || raw.TITLE || '';
-  const slug = (raw.slug || raw.Slug || raw.SLUG || '').trim().replace(/^\//, '');
+  const slug = (raw.slug || raw.Slug || raw.SLUG || '').trim().replace(/^\/+|\/+$/g, '');
   const rawDate = raw.date || raw.Date || raw.DATE || '';
   const date = parseDateString(rawDate);
   const coverImage = raw.coverImage || raw.coverimage || raw.CoverImage || raw.COVERIMAGE || raw.image || raw.Image || '';
@@ -304,7 +304,7 @@ function parseCSVFindSlug(csvText: string, targetSlug: string): Post | null {
           for (let idx = 0; idx < headers.length; idx++) {
             rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
           }
-          const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\//, '');
+          const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\/+|\/+$/g, '');
           if (slugVal.toLowerCase() === lowerTarget) {
             return normalizePostFull(rowDict);
           }
@@ -326,7 +326,7 @@ function parseCSVFindSlug(csvText: string, targetSlug: string): Post | null {
       for (let idx = 0; idx < headers.length; idx++) {
         rowDict[headers[idx]] = idx < currentRow.length ? currentRow[idx] : '';
       }
-      const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\//, '');
+      const slugVal = (rowDict.slug || rowDict.Slug || rowDict.SLUG || '').trim().replace(/^\/+|\/+$/g, '');
       if (slugVal.toLowerCase() === lowerTarget) {
         return normalizePostFull(rowDict);
       }
