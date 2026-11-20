@@ -1,6 +1,6 @@
 import { getPosts } from '@/lib/posts';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 900;
 
 /**
  * Google News Sitemap

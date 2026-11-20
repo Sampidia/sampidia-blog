@@ -102,7 +102,7 @@ export default function Footer() {
           <div className="md:col-span-2 space-y-6">
             <Link href="/" className="flex items-center gap-2 group w-fit">
               <Image
-                src="/images/SamPidia.png"
+                src="/images/SamPidia.webp"
                 alt="SamPidia Logo"
                 width={180}
                 height={50}

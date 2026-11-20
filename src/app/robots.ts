@@ -13,6 +13,20 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: ['GPTBot', 'CCBot', 'Google-Extended', 'anthropic-ai', 'Claude-Web'],
         disallow: '/',
       },
+      // Restrict aggressive commercial crawlers and scrapers that exhaust bandwidth
+      {
+        userAgent: [
+          'Bytespider',
+          'PetalBot',
+          'SemrushBot',
+          'AhrefsBot',
+          'DotBot',
+          'MJ12bot',
+          'Amazonbot',
+          'DataForSeoBot',
+        ],
+        disallow: '/',
+      },
     ],
     sitemap: [
       'https://sampidia.com/sitemap.xml',

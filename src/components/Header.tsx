@@ -46,7 +46,7 @@ export default function Header() {
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 group">
               <Image
-                src="/images/SamPidia.png"
+                src="/images/SamPidia.webp"
                 alt="SamPidia Logo"
                 width={200}
                 height={56}

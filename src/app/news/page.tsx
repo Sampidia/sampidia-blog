@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import CategoryPage from '@/components/CategoryPage';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'News',
