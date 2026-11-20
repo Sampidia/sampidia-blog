@@ -1,6 +1,6 @@
 import { getPosts } from '@/lib/posts';
 
-export const revalidate = 1800;
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

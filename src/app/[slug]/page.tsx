@@ -26,17 +26,9 @@ function safeFormatDate(dateStr: string, options: Intl.DateTimeFormatOptions): s
   return d.toLocaleDateString('en-US', options);
 }
 
-// Allow any slug not pre-generated at build time to render on demand.
 export const dynamicParams = true;
-// Revalidate at most every 5 minutes (ISR)
-export const revalidate = 300;
-
-export async function generateStaticParams() {
-  const posts = await getPosts();
-  // Pre-render the top 50 most recent articles at build time.
-  // All older posts render on-demand instantly thanks to dynamicParams = true.
-  return posts.slice(0, 50).map((post) => ({ slug: post.slug }));
-}
+// Render on-demand from in-memory cache (Cloudflare Cache Rule caches post pages at edge)
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

@@ -1,8 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/posts';
 
-// Revalidate sitemap every hour (3600 seconds)
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const BASE_URL = 'https://sampidia.com';
 

@@ -519,7 +519,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const dropboxUrl = cleanDropboxUrl(process.env.DROPBOX_BACKUP_URL || process.env.DROPBOX_BACKUP_UR || DEFAULT_DROPBOX_URL);
   if (dropboxUrl) {
     try {
-      const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 10_000);
+      const res = await fetchWithTimeout(dropboxUrl, { cache: 'no-store' }, 3_000);
       if (res.ok) {
         const rawPosts = await res.json();
         if (Array.isArray(rawPosts)) {
